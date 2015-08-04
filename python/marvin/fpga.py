@@ -49,7 +49,7 @@ class Board(object):
   def _load_percentage(self):
     """Returns the percentage value from GxFpgaLoadStatus"""
     percentage = ctypes.c_short(0)
-    self._call(GxFpga.GxFpgaLoadStatus, byref(percentage))
+    self._call(GxFpga.GxFpgaLoadStatus, self._handle, byref(percentage))
     return percentage.value
   
   def summary(self):
