@@ -38,7 +38,7 @@ class Board(object):
                   is assumed to be byref(status)
     """
     status = ctypes.c_short(0)
-    args.append(byref(status))
+    args = args + (byref(status), )
     function(*args)
     
     if status.value != 0:
