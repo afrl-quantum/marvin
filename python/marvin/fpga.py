@@ -2,6 +2,7 @@
 
 import ctypes
 from ctypes import create_string_buffer, byref
+import numpy as np
 import time
 
 from .clib import GxFpga
@@ -81,57 +82,50 @@ class Board(object):
     while self._load_percentage() != 100:
       time.sleep(0.1)
   
-  def read(self, location, addr, size=4):
+  def read(self, location, addr, count=1):
     """
     Read a value from the FPGA.
     
     :param location: 'reg' (register space, BAR 1) or 'mem' (memory, BAR 2)
-    :param addr: the address to read
-    :param size: the access size in bytes (1, 2, or 4)
+    :param addr: the address to read (must be a multiple of 4)
+    :param count: the number of 32-bit dwords to read
     
-    :return: the value read
+    :return: the values read, as a numpy.ndarray
     """
-    if size == 1:
-      val = ctypes.c_byte(0)
-    elif size == 2:
-      val = ctypes.c_int16(0)
-    elif size == 4:
-      val = ctypes.c_int32(0)
-    else:
-      raise ValueError('register access size must be 1, 2, or 4')
     
     if location == 'reg':
       function = GxFpga.GxFpgaReadRegister
     elif location == 'mem':
-      function_name = GxFpga.GxFpgaReadMemory
-      
-    self._call(function, self._handle, addr, byref(val), size)
-    return val.value
+      function = GxFpga.GxFpgaReadMemory
+    
+    val = np.zeros(() if count == 1 else (count,), dtype=np.int32)
+    valptr = val.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+    self._call(function, self._handle, addr, valptr, 4*count)
+    
+    return val
   
-  def write(self, location, addr, value, size=4):
+  def write(self, location, addr, values):
     """
     Write a value to the FPGA.
     
     :param location: 'reg' (register space, BAR 1) or 'mem' (memory, BAR 2)
-    :param addr: the address to write
-    :param value: the value to write
-    :param size: the access size in bytes (1, 2, or 4)
+    :param addr: the address to write (must be a multiple of 4)
+    :param values: the 32-bit value(s) to write, as something coercable to a numpy.ndarray
     """
-    if size == 1:
-      val = ctypes.c_byte(value)
-    elif size == 2:
-      val = ctypes.c_int16(value)
-    elif size == 4:
-      val = ctypes.c_int32(value)
+    
+    vals = np.asarray(values, dtype=np.int32)
+    if vals.ndim == 0:
+      size = 4
+    elif vals.ndim == 1:
+      size = 4 * len(vals)
     else:
-      raise ValueError('register access size must be 1, 2, or 4')
+      raise ValueError('cannot write arrays of greater than 1 dimension')
     
     if location == 'reg':
       function = GxFpga.GxFpgaWriteRegister
     elif location == 'mem':
       function = GxFpga.GxFpgaWriteMemory
-      
-    self._call(function, self._handle, addr, byref(val), size)
-    return val.value
-  
+    
+    valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+    self._call(function, self._handle, addr, valptr, size)
 
