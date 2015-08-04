@@ -43,7 +43,7 @@ class Board(object):
     
     if status.value != 0:
       err_str = create_string_buffer('', size=256)
-      GxFpga.GxFpgaGetErrorString(status, byref(err_str), 256, byref(status))
+      GxFpga.GxFpgaGetErrorString(status, err_str, 256, byref(status))
       raise FpgaError(err_str.value)
   
   def _load_percentage(self):
