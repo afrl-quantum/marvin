@@ -113,7 +113,7 @@ class Board(object):
     :param values: the 32-bit value(s) to write, as something coercable to a numpy.ndarray
     """
     
-    vals = np.asarray(values, dtype=np.int32)
+    vals = np.asarray(values, dtype=np.uint32)
     if vals.ndim == 0:
       size = 4
     elif vals.ndim == 1:
@@ -126,6 +126,6 @@ class Board(object):
     elif location == 'mem':
       function = GxFpga.GxFpgaWriteMemory
     
-    valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+    valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
     self._call(function, self._handle, addr, valptr, size)
 
