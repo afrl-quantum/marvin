@@ -120,7 +120,7 @@ class TimingBoard(fpga.Board):
     :return: a list of strings
     """
     s = self.read('reg', self.REGS['STATUS']).astype(np.uint32)
-    errs = [ k for k, v in self.STATUS_BITS if (s & v) != 0 ]
+    errs = [ k for k, v in self.STATUS_BITS.items() if (s & v) != 0 ]
     return errs
 
   def command(self, cmd):
