@@ -125,6 +125,18 @@ class TimingBoard(fpga.Board):
     errs = [ k for k, v in self.STATUS_BITS.items() if (s & v) != 0 ]
     return errs
 
+  def clear_errors(self, mask=None):
+    """
+    Clear latched errors.
+    :param mask: None to clear all errors, or a list of error names to clear
+    """
+    if mask is not None:
+      m = reduce(lambda a, v: a | v, [ self.STATUS_BITS[k] for k in mask ])
+    else:
+      m = ~0x000f
+    
+    self.write('reg', self.REGS['STATUS'], m)
+
   def command(self, cmd):
     """
     Tell the card to execute a command.
