@@ -120,6 +120,8 @@ class TimingBoard(fpga.Board):
     :return: a list of strings
     """
     s = self.read('reg', self.REGS['STATUS']).astype(np.uint32)
+    s &= ~0x000f # ignore state bits and PCI_PERMITTED
+
     errs = [ k for k, v in self.STATUS_BITS.items() if (s & v) != 0 ]
     return errs
 
@@ -130,7 +132,7 @@ class TimingBoard(fpga.Board):
     :param cmd: one of 'NOOP', 'ARM', 'TRIGGER', 'PAUSE', 'RESUME', or 'STOP'
     :return: True if the command was accepted, False if an error bit was latched
     """
-    if not cmd in self.CMDS:
+    if not cmd in self.COMMANDS:
       raise ValueError('bad command')
 
     # clear the command errors
@@ -138,7 +140,7 @@ class TimingBoard(fpga.Board):
     self.write('reg', self.REGS['STATUS'], error_bits)
 
     # write the command
-    self.write('reg', self.REGS['CMD'], self.CMDS[cmd])
+    self.write('reg', self.REGS['CMD'], self.COMMANDS[cmd])
     
     # check the status register
     v = self.read('reg', self.REGS['STATUS']).astype(np.uint32)
