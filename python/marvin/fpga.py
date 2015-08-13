@@ -97,6 +97,8 @@ class Board(object):
       function = GxFpga.GxFpgaReadRegister
     elif location == 'mem':
       function = GxFpga.GxFpgaReadMemory
+    else:
+      raise ValueError("location must be 'reg' or 'mem'")
     
     val = np.zeros(() if count == 1 else (count,), dtype=np.int32)
     valptr = val.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
@@ -125,6 +127,8 @@ class Board(object):
       function = GxFpga.GxFpgaWriteRegister
     elif location == 'mem':
       function = GxFpga.GxFpgaWriteMemory
+    else:
+      raise ValueError("location must be 'reg' or 'mem'")
     
     valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
     self._call(function, self._handle, addr, valptr, size)
