@@ -3,6 +3,8 @@
 import ctypes
 from ctypes import create_string_buffer, byref
 import numpy as np
+import os.path
+import sys
 import time
 
 from .clib import GxFpga
@@ -64,12 +66,17 @@ class Board(object):
     
     return buf.value
   
-  def load_program(self, filename, target='volatile'):
+  def load_program(self, filename, target='volatile', progress=None):
     """
     Load a Serial Vector Format (.svf) bitstream file to the FPGA.
     
     :param filename: the path to the target .svf file
     :param target: which storage to load the bitstream into, either 'volatile' or 'eeprom'.
+    :param progress: how to handle load progress notifications. May be None for 
+                     silent, 'stdout' for a textual progress report on stdout, or
+                     a callable progress(step, percent) where step is 'start', 'load',
+                     or 'done', and percent is the percentage of the load that has
+                     completed.
     """
     if target == 'volatile':
       lt = GxFpga.GXFPGA_LOAD_TARGET_VOLATILE
@@ -77,10 +84,32 @@ class Board(object):
       lt = GxFpga.GXFPGA_LOAD_TARGET_EEPROM
     else:
       raise ValueError('target must be either "volatile" or "eeprom"')
+
+    if progress is None:
+      progress = lambda step, percent: None
+    elif progress == 'stdout':
+      base = os.path.basename(filename)
+      def progress(step, percent):
+        if step == 'start':
+          sys.stdout.write('Loading ' + base + ':   0%')
+        elif step == 'load':
+          sys.stdout.write('\b\b\b\b{0}%'.format(percent))
+        elif step == 'done':
+          sys.stdout.write('\b\b\b\bDone.\n')
+
+    try:
+      progress('start', 0)
+    except:
+      raise ValueError("progress must be None, 'stdout', or a callable")
     
     self._call(GxFpga.GxFpgaLoad, self._handle, lt, filename, GxFpga.GXFPGA_LOAD_MODE_ASYNC)
-    while self._load_percentage() != 100:
+    while True:
+      p = self._load_percentage())
+      progress('load', 0)
+      if p == 10:
+        break
       time.sleep(0.1)
+    progress('done', 100)
   
   def read(self, location, addr, count=1):
     """
