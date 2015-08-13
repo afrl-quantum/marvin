@@ -94,7 +94,7 @@ class Board(object):
           sys.stdout.write('Loading ' + base + ':   0%')
           sys.stdout.flush()
         elif step == 'load':
-          sys.stdout.write('\b\b\b\b{0}%'.format(percent))
+          sys.stdout.write('\b\b\b\b{0:3d}%'.format(percent))
           sys.stdout.flush()
         elif step == 'done':
           sys.stdout.write('\b\b\b\bDone.\n')
