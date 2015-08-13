@@ -104,7 +104,7 @@ class Board(object):
     
     self._call(GxFpga.GxFpgaLoad, self._handle, lt, filename, GxFpga.GXFPGA_LOAD_MODE_ASYNC)
     while True:
-      p = self._load_percentage())
+      p = self._load_percentage()
       progress('load', 0)
       if p == 10:
         break
