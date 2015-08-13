@@ -92,10 +92,13 @@ class Board(object):
       def progress(step, percent):
         if step == 'start':
           sys.stdout.write('Loading ' + base + ':   0%')
+          sys.stdout.flush()
         elif step == 'load':
           sys.stdout.write('\b\b\b\b{0}%'.format(percent))
+          sys.stdout.flush()
         elif step == 'done':
           sys.stdout.write('\b\b\b\bDone.\n')
+          sys.stdout.flush()
 
     try:
       progress('start', 0)
