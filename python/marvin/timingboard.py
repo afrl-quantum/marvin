@@ -136,7 +136,7 @@ class TimingBoard(fpga.Board):
       raise ValueError('bad command')
 
     # clear the command errors
-    error_bits = self.STATUS_BITS['ERR_BAD_COMMAND'] | self.STATUS_BITS['ERR_INAPPROPRIATE_STATE']
+    error_bits = self.STATUS_BITS['ERR_BAD_CMD'] | self.STATUS_BITS['ERR_INAPPROPRIATE_STATE']
     self.write('reg', self.REGS['STATUS'], error_bits)
 
     # write the command
