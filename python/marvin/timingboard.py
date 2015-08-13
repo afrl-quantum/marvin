@@ -19,13 +19,13 @@ class TimingBoard(fpga.Board):
              'STOPPING': 5 }
   STATE_NAMES = ['SETUP', 'READY', 'RUN', 'PAUSED', 'ARMING', 'STOPPING']
 
-  STATUS_BITS = { 'PCI_PERMITTED':           0x0080,
-                  'ERR_BAD_CMD':             0x0100,
-                  'ERR_INAPPROPRIATE_STATE': 0x0200,
-                  'ERR_BAD_DURATION':        0x0400,
-                  'ERR_BAD_PCI_ACCESS':      0x0800,
-                  'WARN_BAD_REFCLK':         0x1000,
-                  'WARN_NO_PXI_CLOCK':       0x2000 }
+  STATUS_BITS = { 'PCI_PERMITTED':           0x0008,
+                  'ERR_BAD_CMD':             0x0010,
+                  'ERR_INAPPROPRIATE_STATE': 0x0020,
+                  'ERR_BAD_DURATION':        0x0040,
+                  'ERR_BAD_PCI_ACCESS':      0x0080,
+                  'WARN_BAD_REFCLK':         0x0100,
+                  'WARN_NO_PXI_CLOCK':       0x0200 }
 
   COMMANDS = { 'NOOP':    0,
                'ARM':     1,
