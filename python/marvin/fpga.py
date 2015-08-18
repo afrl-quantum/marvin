@@ -48,6 +48,12 @@ class Board(object):
       err_str = create_string_buffer('', size=256)
       GxFpga.GxFpgaGetErrorString(status, err_str, 256, byref(status))
       raise FpgaError(err_str.value)
+
+  def reset(self):
+    """
+    Reset the board.
+    """
+    self._call(GxFpga.GxFpgaReset, self._handle)
   
   def _load_percentage(self):
     """Returns the percentage value from GxFpgaLoadStatus"""
