@@ -48,12 +48,13 @@ class ReconfigRegister(c_uint32):
   BIT0['CMD']   = 0
   WIDTH['CMD']  = 3
   FORWARD['CMD'] = dict(
-    read        = 0b000, # 0
-    write       = 0b001, # 1
-    reconfig    = 0b010, # 2
-    reset       = 0b011, # 3
-    pll_reset   = 0b100, # 4
-    clk_switch  = 0b101, # 5
+    noop        = 0b000, # 0
+    read        = 0b001, # 1
+    write       = 0b010, # 2
+    reconfig    = 0b011, # 3
+    reset       = 0b100, # 4
+    pll_reset   = 0b101, # 5
+    clk_switch  = 0b110, # 6
   )
   REVERSE['CMD'] = { 0:{v:k for k,v in FORWARD['CMD'].viewitems()} }
 
