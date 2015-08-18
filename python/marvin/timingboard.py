@@ -224,7 +224,7 @@ class TimingBoard(fpga.Board):
     """
     d = self.read('reg', self.REGS['DEBUG']).astype(np.uint32)
 
-    return dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG.viewitems()])
+    return dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG_BITS.viewitems()])
 
   def config(self, number_transitions, use_10_MHz=False, auto_trigger=False, external_trigger=False):
     """
@@ -243,13 +243,13 @@ class TimingBoard(fpga.Board):
     cval = number_transitions << 16
 
     if use_10_MHz:
-      cval |= CONFIG_BITS['REFCLK_10MHZ']
+      cval |= self.CONFIG_BITS['REFCLK_10MHZ']
 
     if auto_trigger:
-      cval |= CONFIG_BITS['AUTO_TRIGGER']
+      cval |= self.CONFIG_BITS['AUTO_TRIGGER']
 
     if external_trigger:
-      cval |= CONFIG_BITS['TRIG_ENABLE']
+      cval |= self.CONFIG_BITS['TRIG_ENABLE']
 
     self.write('reg', self.REGS['CONFIG'], cval)
 
