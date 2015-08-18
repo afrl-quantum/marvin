@@ -30,7 +30,7 @@ class TimingBoard(fpga.Board):
     super(TimingBoard, self).__init__(slot)
     
     if bitstream_file is not None:
-      self.load_program(bitstream_file, progress)
+      self.load_program(bitstream_file, target='volatile', progress=progress)
     
     # check that this is a timing board
     self.version
