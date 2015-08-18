@@ -3,6 +3,7 @@
 from . import fpga
 
 import numpy as np
+import time
 
 class NotATimingBoard(Exception):
   """
@@ -32,7 +33,15 @@ class TimingBoard(fpga.Board):
     if bitstream_file is not None:
       self.load_program(bitstream_file, target='volatile', progress=progress)
     
-    # check that this is a timing board
+      # wait up to 15 seconds for the card to reset and identify as a timing board
+      for i in xrange(15):
+        try:
+          self.version
+          return
+        except NotATimingBoard:
+          time.sleep(1.0)
+
+    # verify that it is a timing board
     self.version
     
   CONFIG_BITS = { 'TRIG_ENABLE':  0x0001,
