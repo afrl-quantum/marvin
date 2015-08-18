@@ -222,7 +222,7 @@ class TimingBoard(fpga.Board):
     
     :return: a dict of debug bit names and their boolean value (True or False)
     """
-    d = self.read('reg', self.REGS('DEBUG')).astype(np.uint32)
+    d = self.read('reg', self.REGS['DEBUG']).astype(np.uint32)
 
     return dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG.viewitems()])
 
