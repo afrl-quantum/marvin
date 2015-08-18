@@ -48,11 +48,12 @@ class ReconfigRegister(c_uint32):
   BIT0['CMD']   = 0
   WIDTH['CMD']  = 3
   FORWARD['CMD'] = dict(
-    read        = 0b000,
-    write       = 0b001,
-    reconfig    = 0b010,
-    reset       = 0b011,
-    pll_reset   = 0b100,
+    read        = 0b000, # 0
+    write       = 0b001, # 1
+    reconfig    = 0b010, # 2
+    reset       = 0b011, # 3
+    pll_reset   = 0b100, # 4
+    clk_switch  = 0b101, # 5
   )
   REVERSE['CMD'] = { 0:{v:k for k,v in FORWARD['CMD'].viewitems()} }
 
@@ -121,12 +122,27 @@ class ReconfigRegister(c_uint32):
   BIT0['DATA'] = 11
   WIDTH['DATA'] = 9
 
+  # just change WIDTH to get a wider selection
+  BIT0['inclk'] = 20
+  WIDTH['inclk'] = 1
+  FORWARD['inclk'] = {
+    '10' : 0b0, #MHz
+    '80' : 0b1, #MHz
+  }
+  REVERSE['inclk'] = { 0:{v:k for k,v in FORWARD['inclk'].viewitems()} }
+
 
   def get_item(self,name,sub):
+    """
+    Retrieve the value of a subset of bits.
+    """
     b0 = self.BIT0[name]
     msk = mask32( self.WIDTH[name] )
     return self.REVERSE[name][sub][ (self.value >> b0) & msk ]
   def set_item(self, name, value):
+    """
+    Set the value of a subset of bits.
+    """
     if type(value) is str:
       value = self.FORWARD[name][ value.lower() ]
     else:
@@ -168,6 +184,13 @@ class ReconfigRegister(c_uint32):
     b0 = self.BIT0['DATA']
     msk = mask32( self.WIDTH['DATA'] )
     self.value = (self.value & ~(msk<<b0)) | (data << b0)
+
+  @property
+  def inclk(self):
+    return int( self.get_item('inclk',0) )
+  @inclk.setter
+  def inclk(self, inclk_i):
+    return self.set_item('inclk', str(inclk_i))
 
   @property
   def locked(self):
@@ -240,6 +263,7 @@ class Reconfig(object):
     return Dict(
       locked = bool(reg.locked),
       busy = bool(reg.busy),
+      inclk = reg.inclk,
     )
 
   def reconfig(self):
@@ -269,7 +293,7 @@ class Reconfig(object):
     return self._Fin
 
   @Fin.setter
-  def Fin(self, value, reconfig=False):
+  def Fin(self, value, reconfig=True):
     if self._Fin is not None:
       F = self.frequencies
       #M_N_0 = F['vco'] / self._Fin
@@ -285,7 +309,13 @@ class Reconfig(object):
     self._Fin = value
 
     if reconfig:
+      self.set_inclk( value )
       self.reconfig()
+
+  def set_inclk(self, value):
+    self.reg.cmd = 'clk_switch'
+    self.reg.inclk = value
+    self.fpga.write(self.addr_space, self.write_address, self.reg)
 
 
   # a cheat until we figure this out completely
