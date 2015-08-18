@@ -86,7 +86,7 @@ class ReconfigRegister(c_uint32):
   REVERSE['COUNTER'] = { 0:{v:k for k,v in FORWARD['COUNTER'].viewitems()} }
 
   BIT0['PARAM'] = 7
-  WIDTH['PARAM'] = 4
+  WIDTH['PARAM'] = 3
   FORWARD['PARAM'] = dict(
     cp_lf = dict(
       # for charge pump / loop filter
@@ -119,15 +119,15 @@ class ReconfigRegister(c_uint32):
   FORWARD['PARAM'] = reduce( lambda D,d : dict(D,**d),
                              [dict()] + FORWARD['PARAM'].values() )
 
-  BIT0['DATA'] = 11
+  BIT0['DATA'] = 10
   WIDTH['DATA'] = 9
 
   # just change WIDTH to get a wider selection
-  BIT0['inclk'] = 20
+  BIT0['inclk'] = 19
   WIDTH['inclk'] = 1
   FORWARD['inclk'] = {
-    '10' : 0b0, #MHz
-    '80' : 0b1, #MHz
+    '80' : 0b0, #MHz
+    '10' : 0b1, #MHz
   }
   REVERSE['inclk'] = { 0:{v:k for k,v in FORWARD['inclk'].viewitems()} }
 
