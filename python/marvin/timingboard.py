@@ -69,6 +69,7 @@ class TimingBoard(fpga.Board):
                  'Run_Timer':         0x0004,
                  'Load_Instructions': 0x0008,
                  'Dynamic_Output':    0x0010,
+                 'DecodeAddr':    0x007fff80,
                  'System_FState': 0x007f8000,
                  'Core_FState':   0xff800000 }
 
@@ -227,8 +228,9 @@ class TimingBoard(fpga.Board):
     d = self.read('reg', self.REGS['DEBUG']).astype(np.uint32)
 
     bits = dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG_BITS.viewitems()])
-    bits['System_FState'] = bin((d & self.DEBUG_BITS['System_FState']) >> 15)
-    bits['Core_FState'] = bin(d >> 23)
+    bits['DecodeAddr'] = (d & self.DEBUG_BITS['DecodeAddr']) >> 7
+#    bits['System_FState'] = ((d & self.DEBUG_BITS['System_FState']) >> 15)
+    bits['Core_FState'] = (d >> 23)
     return bits
 
   def config(self, number_transitions, use_10_MHz=False, auto_trigger=False, external_trigger=False):
