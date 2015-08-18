@@ -17,14 +17,23 @@ class TimingBoard(fpga.Board):
   GX3500 FPGA board.
   """
 
-  def __init__(self, slot):
+  def __init__(self, slot, bitstream_file=None, progress=None):
     """
-    Bind a TimingBoard to a specific PCI/PXI slot.
+    Bind a TimingBoard to a PCI/PXI slot, uploading a specific
+    SVF bitstream file if specified.
+    
+    :param slot: the PCI bus/slot number
+    :param bitstream_file: the path of the SVF file implementing the timing board,
+                           or None if the card is already configured
+    :param progress: the progress indicator for fpga.load_program()
     """
     super(TimingBoard, self).__init__(slot)
     
+    if bitstream_file is not None:
+      self.load_program(bitstream_file, progress)
+    
     # check that this is a timing board
-    self.version()
+    self.version
     
   CONFIG_BITS = { 'TRIG_ENABLE':  0x0001,
                   'REFCLK_10MHz': 0x0002,
