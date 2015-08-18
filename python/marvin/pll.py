@@ -88,7 +88,7 @@ class ReconfigRegister(c_uint32):
 
   BIT0['PARAM'] = 7
   WIDTH['PARAM'] = 3
-  FORWARD['PARAM'] = dict(
+  ALL_PARAMS = dict(
     cp_lf = dict(
       # for charge pump / loop filter
       cp_unused   = 0b101,
@@ -115,10 +115,10 @@ class ReconfigRegister(c_uint32):
     }
   )
   REVERSE['PARAM'] = { k0:{v:k for k,v in D.viewitems()}
-    for k0,D in FORWARD['PARAM'].viewitems()
+    for k0,D in ALL_PARAMS.viewitems()
   }
   FORWARD['PARAM'] = reduce( lambda D,d : dict(D,**d),
-                             [dict()] + FORWARD['PARAM'].values() )
+                             [dict()] + ALL_PARAMS.values() )
 
   BIT0['DATA'] = 10
   WIDTH['DATA'] = 9
@@ -248,6 +248,11 @@ class Reconfig(object):
 
 
   def get(self, counter, param):
+    """
+    issue a read instruction for one parameter of the given instruction.
+
+    Returns:  the value of the clock parameter
+    """
     self.reg.cmd = 'read'
     self.reg.counter = counter
     self.reg.param = param
@@ -257,6 +262,18 @@ class Reconfig(object):
     # get response from fpga
     reg = ReconfigRegister( self.fpga.read(self.addr_space, self.read_address) )
     return reg.data
+
+  def get_clock_config(self, counter):
+    """
+    retrieve all parameters for the given clock.
+    """
+    return { k:self.get(counter, v) for k,v in ALL_PARAMS[counter].items() }
+
+  def get_all_clocks_config(self):
+    return {
+      c:self.get_clock_config(c)
+      for c in ['m','n','vco','cp_lf']+self.output_counters
+    }
 
   @property
   def status(self):
