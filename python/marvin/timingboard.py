@@ -3,6 +3,7 @@
 from . import fpga
 
 import numpy as np
+import time
 
 class NotATimingBoard(Exception):
   """
@@ -17,14 +18,31 @@ class TimingBoard(fpga.Board):
   GX3500 FPGA board.
   """
 
-  def __init__(self, slot):
+  def __init__(self, slot, bitstream_file=None, progress=None):
     """
-    Bind a TimingBoard to a specific PCI/PXI slot.
+    Bind a TimingBoard to a PCI/PXI slot, uploading a specific
+    SVF bitstream file if specified.
+    
+    :param slot: the PCI bus/slot number
+    :param bitstream_file: the path of the SVF file implementing the timing board,
+                           or None if the card is already configured
+    :param progress: the progress indicator for fpga.load_program()
     """
     super(TimingBoard, self).__init__(slot)
     
-    # check that this is a timing board
-    self.version()
+    if bitstream_file is not None:
+      self.load_program(bitstream_file, target='volatile', progress=progress)
+    
+      # wait up to 15 seconds for the card to reset and identify as a timing board
+      for i in xrange(15):
+        try:
+          self.version
+          return
+        except NotATimingBoard:
+          time.sleep(1.0)
+
+    # verify that it is a timing board
+    self.version
     
   CONFIG_BITS = { 'TRIG_ENABLE':  0x0001,
                   'REFCLK_10MHz': 0x0002,
@@ -50,7 +68,9 @@ class TimingBoard(fpga.Board):
                  'PCI_Allowed':       0x0002,
                  'Run_Timer':         0x0004,
                  'Load_Instructions': 0x0008,
-                 'Dynamic_Output':    0x0010 }
+                 'Dynamic_Output':    0x0010,
+                 'System_FState': 0x007f8000,
+                 'Core_FState':   0xff800000 }
 
   COMMANDS = { 'NOOP':    0,
                'ARM':     1,
@@ -204,9 +224,12 @@ class TimingBoard(fpga.Board):
     
     :return: a dict of debug bit names and their boolean value (True or False)
     """
-    d = self.read('reg', self.REGS('DEBUG')).astype(np.uint32)
+    d = self.read('reg', self.REGS['DEBUG']).astype(np.uint32)
 
-    return dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG.viewitems()])
+    bits = dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG_BITS.viewitems()])
+    bits['System_FState'] = bin((d & self.DEBUG_BITS['System_FState']) >> 15)
+    bits['Core_FState'] = bin(d >> 23)
+    return bits
 
   def config(self, number_transitions, use_10_MHz=False, auto_trigger=False, external_trigger=False):
     """
@@ -225,13 +248,13 @@ class TimingBoard(fpga.Board):
     cval = number_transitions << 16
 
     if use_10_MHz:
-      cval |= CONFIG_BITS['REFCLK_10MHZ']
+      cval |= self.CONFIG_BITS['REFCLK_10MHZ']
 
     if auto_trigger:
-      cval |= CONFIG_BITS['AUTO_TRIGGER']
+      cval |= self.CONFIG_BITS['AUTO_TRIGGER']
 
     if external_trigger:
-      cval |= CONFIG_BITS['TRIG_ENABLE']
+      cval |= self.CONFIG_BITS['TRIG_ENABLE']
 
     self.write('reg', self.REGS['CONFIG'], cval)
 
