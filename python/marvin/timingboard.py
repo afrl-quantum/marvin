@@ -4,6 +4,12 @@ from . import fpga
 
 import numpy as np
 
+class NotATimingBoard(Exception):
+  """
+  This exception is raised when the requested board address does not appear to actually
+  be a timing board.
+  """
+  pass
 
 class TimingBoard(fpga.Board):
   """
@@ -11,21 +17,40 @@ class TimingBoard(fpga.Board):
   GX3500 FPGA board.
   """
 
+  def __init__(self, slot):
+    """
+    Bind a TimingBoard to a specific PCI/PXI slot.
+    """
+    super(TimingBoard, self).__init__(slot)
+    
+    # check that this is a timing board
+    self.version()
+    
+  CONFIG_BITS = { 'TRIG_ENABLE':  0x0001,
+                  'REFCLK_10MHz': 0x0002,
+                  'AUTO_TRIGGER': 0x0008 }
+
   STATES = { 'SETUP':    0,
              'READY':    1,
              'RUN':      2,
              'PAUSED':   3,
              'ARMING':   4,
              'STOPPING': 5 }
+
   STATE_NAMES = ['SETUP', 'READY', 'RUN', 'PAUSED', 'ARMING', 'STOPPING']
 
-  STATUS_BITS = { 'PCI_PERMITTED':           0x0008,
-                  'ERR_BAD_CMD':             0x0010,
+  STATUS_BITS = { 'ERR_BAD_CMD':             0x0010,
                   'ERR_INAPPROPRIATE_STATE': 0x0020,
                   'ERR_BAD_DURATION':        0x0040,
                   'ERR_BAD_PCI_ACCESS':      0x0080,
                   'WARN_BAD_REFCLK':         0x0100,
                   'WARN_NO_PXI_CLOCK':       0x0200 }
+
+  DEBUG_BITS = { 'Buffer_Empty':      0x0001,
+                 'PCI_Allowed':       0x0002,
+                 'Run_Timer':         0x0004,
+                 'Load_Instructions': 0x0008,
+                 'Dynamic_Output':    0x0010 }
 
   COMMANDS = { 'NOOP':    0,
                'ARM':     1,
@@ -52,6 +77,7 @@ class TimingBoard(fpga.Board):
            'OUTPUT_D': 0x003c,
            'TIME_HI':  0x0040,
            'TIME_LO':  0x0044,
+           'DEBUG':    0x0078,
            'VERSION':  0x007c }
 
   def set_defaults(self, port_a=0, port_b=0, port_c=0, port_d=0):
@@ -122,7 +148,7 @@ class TimingBoard(fpga.Board):
     s = self.read('reg', self.REGS['STATUS']).astype(np.uint32)
     s &= ~0x000f # ignore state bits and PCI_PERMITTED
 
-    errs = [ k for k, v in self.STATUS_BITS.items() if (s & v) != 0 ]
+    errs = [ k for k, v in self.STATUS_BITS.viewitems() if (s & v) != 0 ]
     return errs
 
   def clear_errors(self, mask=None):
@@ -157,4 +183,55 @@ class TimingBoard(fpga.Board):
     # check the status register
     v = self.read('reg', self.REGS['STATUS']).astype(np.uint32)
     return ((v & error_bits) == 0)
+
+  @property
+  def version(self):
+    """
+    Read the VERSION register.
+    
+    :return: a tuple (major-version, minor-version)
+    """
+    ver = self.read('reg', self.REGS['VERSION']).astype(np.uint32)
+    if (ver & 0xffff0000) != 0xafd00000:
+      raise NotATimingBoard()
+
+    return ((ver & 0xff00) >> 8, (ver & 0xff))
+
+  @property
+  def debug(self):
+    """
+    Reads the DEBUG register.
+    
+    :return: a dict of debug bit names and their boolean value (True or False)
+    """
+    d = self.read('reg', self.REGS('DEBUG')).astype(np.uint32)
+
+    return dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG.viewitems()])
+
+  def config(self, number_transitions, use_10_MHz=False, auto_trigger=False, external_trigger=False):
+    """
+    Sets the card configuration through the CONFIG register.
+    
+    :param number_transitions: the number of valid steps in the uploaded program
+    :param use_10_MHz: True if the master timebase should be referenced from the PXI 10 MHz,
+                       False if it should be referenced to the onboard 80 MHz oscillator
+    :param auto_trigger: True if the card should automatically trigger itself when it is
+                         ARMed, False if it should wait for a software or hardware trigger
+                         before executing the sequence.
+    :param external_trigger: True if the card should listen to the external trigger line,
+                             False if it should only accept software triggers.
+    """
+
+    cval = number_transitions << 16
+
+    if use_10_MHz:
+      cval |= CONFIG_BITS['REFCLK_10MHZ']
+
+    if auto_trigger:
+      cval |= CONFIG_BITS['AUTO_TRIGGER']
+
+    if external_trigger:
+      cval |= CONFIG_BITS['TRIG_ENABLE']
+
+    self.write('reg', self.REGS['CONFIG'], cval)
 
