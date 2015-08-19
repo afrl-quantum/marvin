@@ -141,6 +141,12 @@ class ReconfigRegister(c_uint32):
   REVERSE['inclk'] = { 0:{v:k for k,v in FORWARD['inclk'].viewitems()} }
 
 
+  BIT0['other'] = 20
+  WIDTH['other'] = 12
+
+
+  ##### END REGISTER LAYOUT #####
+
   def get_item(self,name,sub):
     """
     Retrieve the value of a subset of bits.
@@ -209,6 +215,13 @@ class ReconfigRegister(c_uint32):
   @property
   def busy(self):
     return bool((self.value >>1 ) & 0x1)
+
+
+  @property
+  def other(self):
+    b0 = self.BIT0['other']
+    msk = mask32( self.WIDTH['other'] )
+    return (self.value >> b0) & msk
 
 
   def __repr__(self):
