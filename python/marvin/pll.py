@@ -251,22 +251,24 @@ class Reconfig(object):
     self.write_address = write_address
     self.read_address = write_address if read_address is None else read_address
     self.addr_space = addr_space
-    self.reg = ReconfigRegister()
     self.output_counters = output_counters
     self._Fin = None
     self.Fin = Fin
     self.Fvco_extrema = xrange(600, 1201)
 
   def _set(self, counter, param, value, reconfig=False):
-    self.reg.cmd = 'write'
-    self.reg.counter = counter
-    self.reg.param = param
-    self.reg.data = value
+    reg = ReconfigRegister(cmd='write',counter=counter,param=param,data=value)
 
     # now write this to the fpga
-    self.fpga.write(self.addr_space, self.write_address, self.reg)
+    self.fpga.write(self.addr_space, self.write_address, reg)
     if reconfig:
       self.reconfig()
+
+  def read(self):
+    return ReconfigRegister(self.fpga.read(self.addr_space, self.read_address))
+
+  def write(self, value):
+    self.fpga.write(self.addr_space, self.write_address, value)
 
   def set(self, counter, reconfig=False, **params):
     for P,V in params.items():
@@ -281,53 +283,62 @@ class Reconfig(object):
 
     Returns:  the value of the clock parameter
     """
-    self.reg.cmd = 'read'
-    self.reg.counter = counter
-    self.reg.param = param
+    reg = ReconfigRegister(cmd='read',counter=counter,param=param)
 
     # now write this to the fpga
-    self.fpga.write(self.addr_space, self.write_address, self.reg)
+    self.write(reg)
     # get response from fpga
-    reg = ReconfigRegister( self.fpga.read(self.addr_space, self.read_address) )
-    return reg.data
+    return self.read().data
 
   def get_clock_config(self, counter):
     """
     retrieve all parameters for the given clock.
     """
-    return { k:self.get(counter, v) for k,v in ALL_PARAMS[counter].items() }
+    RR = ReconfigRegister
+    return Dict({
+      k:self.get(counter, v) for k,v in RR.ALL_PARAMS[counter].items()
+    })
 
   def get_all_clocks_config(self):
-    return {
+    return Dict({
       c:self.get_clock_config(c)
       for c in ['m','n','vco','cp_lf']+self.output_counters
-    }
+    })
 
   @property
   def status(self):
-    reg = ReconfigRegister( self.fpga.read(self.addr_space, self.read_address) )
+    reg = self.read()
     return Dict(
-      locked = bool(reg.locked),
-      busy = bool(reg.busy),
+      locked = reg.locked,
+      busy = reg.busy,
       inclk = reg.inclk,
     )
 
   def reconfig(self):
-    self.reg.cmd = 'reconfig'
-    self.fpga.write(self.addr_space, self.write_address, self.reg)
+    self.write( ReconfigRegister(cmd='reconfig') )
+
+  def reset(self):
+    self.write( ReconfigRegister(cmd='reset') )
+
+  def pll_reset(self):
+    self.write( ReconfigRegister(cmd='pll_reset') )
 
   @property
   def frequencies(self):
-    M = 1 if self.get('M','bypass') else self.get('M','high_count') + self.get('M','low_count')
-    N = 1 if self.get('N','bypass') else  self.get('N','high_count') + self.get('N','low_count')
+    """
+    Returns:  calculated output frequencies for all known counters.
+    """
+    S = self.get_all_clocks_config()
+    M = 1 if S.m.bypass else S.m.high_count + S.m.low_count
+    N = 1 if S.n.bypass else S.n.high_count + S.n.low_count
 
     C = {
-      c:(1 if self.get(c,'bypass') else self.get(c,'high_count') + self.get(c,'low_count'))
+      c:(1 if S[c].bypass else S[c].high_count + S[c].low_count)
       for c in self.output_counters
     }
 
     vco  = self.Fin * (M/N)
-    return dict(
+    return Dict(
       Fin   = self.Fin,
       vco  = vco,
       **{ c: vco / Ci for c,Ci in C.items() }
@@ -340,11 +351,22 @@ class Reconfig(object):
 
   @Fin.setter
   def Fin(self, value, reconfig=True):
+    """
+    Change the input clock as well as change the scaling counters to ensure that
+    the output frequencies do not change.
+    """
+    if self._Fin is None and self.status.inclk == value:
+      self._Fin = value
+      return
+
+    if value is None:
+      return
+
     if self._Fin is not None:
       F = self.frequencies
-      #M_N_0 = F['vco'] / self._Fin
-      #M_N_1 = F['vco'] / value
-      if F['vco'] != 600:
+      #M_N_0 = F.vco / self._Fin
+      #M_N_1 = F.vco / value
+      if F.vco != 600:
         raise NotImplementedError('Expecting F_vco == 600 MHz!')
 
 
@@ -359,25 +381,28 @@ class Reconfig(object):
       self.reconfig()
 
   def set_inclk(self, value):
-    self.reg.cmd = 'clk_switch'
-    self.reg.inclk = value
-    self.fpga.write(self.addr_space, self.write_address, self.reg)
+    """
+    Select the input clock for the PLL.  This immediately switches the input.
+    It should be expected that the clock will certainly go unlocked, especially
+    if the counters have not yet been set appropriately.
+    """
+    self.write( ReconfigRegister(cmd='clk_switch', inclk=value) )
 
 
   # a cheat until we figure this out completely
   F_param = {
     10: dict(
-      M = dict(bypass=0,high_count=30,low_count=30,odd=0),
-      N = dict(bypass=1,high_count=0,low_count=0,odd=0),
-      cp_lf = dict(lf_resistor=19, lf_capacitor=0),
-      vco = dict( vco_post_scale = 0 ),
+      m = Dict(bypass=0,high_count=30,low_count=30,odd=0),
+      n = Dict(bypass=1,high_count=0,low_count=0,odd=0),
+      cp_lf = Dict(lf_resistor=19, lf_capacitor=0, cp_current=1),
+      vco = Dict( vco_post_scale = 0 ),
     ),
 
     80: dict(
-      M = dict(bypass=0,high_count=8,low_count=7,odd=1),
-      N = dict(bypass=1,high_count=1,low_count=0,odd=0),
-      cp_lf = dict(lf_resistor=27, lf_capacitor=0),
-      vco = dict( vco_post_scale = 0 ),
+      m = Dict(bypass=0,high_count=8,low_count=7,odd=1),
+      n = Dict(bypass=0,high_count=1,low_count=1,odd=0),
+      cp_lf = Dict(lf_resistor=27, lf_capacitor=0, cp_current=1),
+      vco = Dict( vco_post_scale = 0 ),
     ),
   }
 
@@ -407,11 +432,11 @@ class Reconfig(object):
     if clock not in F:
       raise LookupError('Could not identify clock "{}"'.format(clock))
 
-    C = int( round(F['vco'] / float(value)) )
-    Fnew = F['vco'] / C
+    C = int( round(F.vco / float(value)) )
+    Fnew = F.vco / C
 
     if C <= 0:
-      raise RuntimeError('cannot increase frequency more than vco={}'.format(F['vco']))
+      raise RuntimeError('cannot increase frequency more than vco={}'.format(F.vco))
     elif C > 511:
       raise RuntimeError('cannot such a low frequency')
     elif value != Fnew:
