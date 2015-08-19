@@ -35,9 +35,9 @@ class ReconfigRegister(c_uint32):
   def __init__(self, *a,**kw):
     super(ReconfigRegister,self).__init__(*a)
     for k,v in kw.items():
-      if k not in FORWARD:
+      if not hasattr(self, k):
         raise LookupError('uknown bit value: "{}"'.format(k))
-        self.set_item(k,v)
+      setattr(self, k, v)
 
   BIT0    = Dict()
   WIDTH   = Dict()
