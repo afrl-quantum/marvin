@@ -337,7 +337,7 @@ class Reconfig(object):
       for c in self.output_counters
     }
 
-    vco  = self.Fin * (M/N)
+    vco  = (self.Fin * M) / N
     return Dict(
       Fin   = self.Fin,
       vco  = vco,
