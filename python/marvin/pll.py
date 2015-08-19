@@ -21,7 +21,7 @@ class ReconfigRegister(c_uint32):
   """
   the layout of the reconfig register:
     register[2..0] : command ('read', 'write', 'reconfig', 'reset', 'pll_reset')
-    register[6..3] : COUNTER ('c0','c1',...,'cp_lf','vco','m','n')
+    register[6..3] : counter ('c0','c1',...,'cp_lf','vco','m','n')
     register[9..7] : parameter name (
           for c0..c4: 'high_count', 'low_count', 'bypass', 'mode',
           for m,n   : 'high_count', 'low_count', 'bypass', 'mode','nominal'
@@ -39,15 +39,15 @@ class ReconfigRegister(c_uint32):
         raise LookupError('uknown bit value: "{}"'.format(k))
         self.set_item(k,v)
 
-  BIT0    = dict()
-  WIDTH   = dict()
-  FORWARD = dict()
-  REVERSE = dict()
+  BIT0    = Dict()
+  WIDTH   = Dict()
+  FORWARD = Dict()
+  REVERSE = Dict()
 
   #union with status: valid only on writes
-  BIT0['CMD']   = 0
-  WIDTH['CMD']  = 3
-  FORWARD['CMD'] = dict(
+  BIT0['cmd']   = 0
+  WIDTH['cmd']  = 3
+  FORWARD['cmd'] = Dict(
     noop        = 0b000, # 0
     read        = 0b001, # 1
     write       = 0b010, # 2
@@ -56,18 +56,18 @@ class ReconfigRegister(c_uint32):
     pll_reset   = 0b101, # 5
     clk_switch  = 0b110, # 6
   )
-  REVERSE['CMD'] = { 0:{v:k for k,v in FORWARD['CMD'].viewitems()} }
+  REVERSE['cmd'] = { 0:{v:k for k,v in FORWARD['cmd'].viewitems()} }
 
   #union with cmd: valid only on reads
-  BIT0['LOCKED']   = 0
-  WIDTH['LOCKED']  = 1
-  BIT0['BUSY']   = 1
-  WIDTH['BUSY']  = 1
+  BIT0['locked']   = 0
+  WIDTH['locked']  = 1
+  BIT0['busy']   = 1
+  WIDTH['busy']  = 1
 
 
-  BIT0['COUNTER'] = 3
-  WIDTH['COUNTER'] = 4
-  FORWARD['COUNTER'] = dict(
+  BIT0['counter'] = 3
+  WIDTH['counter'] = 4
+  FORWARD['counter'] = Dict(
     n       = 0b0000,
     m       = 0b0001,
     cp_lf   = 0b0010,
@@ -84,12 +84,12 @@ class ReconfigRegister(c_uint32):
     #c8      = 0b1100,
     #c9      = 0b1101,
   )
-  REVERSE['COUNTER'] = { 0:{v:k for k,v in FORWARD['COUNTER'].viewitems()} }
+  REVERSE['counter'] = { 0:{v:k for k,v in FORWARD['counter'].viewitems()} }
 
-  BIT0['PARAM'] = 7
-  WIDTH['PARAM'] = 3
-  ALL_PARAMS = dict(
-    cp_lf = dict(
+  BIT0['param'] = 7
+  WIDTH['param'] = 3
+  ALL_PARAMS = Dict(
+    cp_lf = Dict(
       # for charge pump / loop filter
       cp_unused   = 0b101,
       cp_current  = 0b000,
@@ -99,29 +99,37 @@ class ReconfigRegister(c_uint32):
     ),
 
     # for vco
-    vco = dict(
+    vco = Dict(
       vco_post_scale = 0b000,
     ),
 
-    **{
-      c:dict(
-        # for counters
-        high_count  = 0b000,
-        low_count   = 0b001,
-        bypass      = 0b100,
-        odd         = 0b101,
-        nominal     = 0b111,
-      ) for c in ['m','n','c0','c1','c2','c3','c4','c5','c6','c7','c8','c9']
-    }
+    **( reduce( lambda D,d: Dict(D,**d), [
+      { c:Dict(
+          # for counters
+          high_count  = 0b000,
+          low_count   = 0b001,
+          bypass      = 0b100,
+          odd         = 0b101,
+          nominal     = 0b111,
+        ) for c in ['m','n']
+      },
+      { c:Dict(
+          # for counters
+          high_count  = 0b000,
+          low_count   = 0b001,
+          bypass      = 0b100,
+          odd         = 0b101,
+        ) for c in ['c0','c1','c2','c3','c4','c5','c6','c7','c8','c9']
+      },
+    ]))
   )
-  REVERSE['PARAM'] = { k0:{v:k for k,v in D.viewitems()}
+  REVERSE['param'] = { k0:{v:k for k,v in D.viewitems()}
     for k0,D in ALL_PARAMS.viewitems()
   }
-  FORWARD['PARAM'] = reduce( lambda D,d : dict(D,**d),
-                             [dict()] + ALL_PARAMS.values() )
+  FORWARD['param'] = reduce(lambda D,d: Dict(D,**d), [{}]+ ALL_PARAMS.values())
 
-  BIT0['DATA'] = 10
-  WIDTH['DATA'] = 9
+  BIT0['data'] = 10
+  WIDTH['data'] = 9
 
   # just change WIDTH to get a wider selection
   BIT0['inclk'] = 19
@@ -140,12 +148,13 @@ class ReconfigRegister(c_uint32):
     b0 = self.BIT0[name]
     msk = mask32( self.WIDTH[name] )
     return self.REVERSE[name][sub][ (self.value >> b0) & msk ]
+
   def set_item(self, name, value):
     """
     Set the value of a subset of bits.
     """
     if type(value) is str:
-      value = self.FORWARD[name][ value.lower() ]
+      value = self.FORWARD[name][value]
     else:
       assert value in self.FORWARD[name].values()
     b0 = self.BIT0[name]
@@ -156,34 +165,34 @@ class ReconfigRegister(c_uint32):
 
   @property
   def cmd(self):
-    return self.get_item('CMD',0)
+    return self.get_item('cmd',0)
   @cmd.setter
   def cmd(self, value):
-    self.set_item('CMD', value)
+    self.set_item('cmd', value)
 
   @property
   def counter(self):
-    return self.get_item('COUNTER',0)
+    return self.get_item('counter',0)
   @counter.setter
   def counter(self, counter):
-    return self.set_item('COUNTER', counter)
+    return self.set_item('counter', counter)
 
   @property
   def param(self):
-    return self.get_item('PARAM',self.counter)
+    return self.get_item('param',self.counter)
   @param.setter
   def param(self, parameter_name):
-    return self.set_item('PARAM', parameter_name)
+    return self.set_item('param', parameter_name)
 
   @property
   def data(self):
-    b0 = self.BIT0['DATA']
-    msk = mask32( self.WIDTH['DATA'] )
+    b0 = self.BIT0['data']
+    msk = mask32( self.WIDTH['data'] )
     return (self.value >> b0) & msk
   @data.setter
   def data(self, data):
-    b0 = self.BIT0['DATA']
-    msk = mask32( self.WIDTH['DATA'] )
+    b0 = self.BIT0['data']
+    msk = mask32( self.WIDTH['data'] )
     self.value = (self.value & ~(msk<<b0)) | (data << b0)
 
   @property
@@ -195,24 +204,30 @@ class ReconfigRegister(c_uint32):
 
   @property
   def locked(self):
-    return self.value & 0x1
+    return bool(self.value & 0x1)
 
   @property
   def busy(self):
-    return (self.value >>1 ) & 0x1
+    return bool((self.value >>1 ) & 0x1)
 
 
   def __repr__(self):
     return 'ReconfigRegister(' \
-           '  counter={counter},' \
-           '  param={param},' \
-           '  data ={data},' \
-           '  cmd={cmd}' \
+             'counter={counter},' \
+            ' param={param},' \
+            ' data ={data},' \
+            ' cmd={cmd},' \
+            ' inclk={inclk},' \
+            ' locked={locked},' \
+            ' busy={busy}' \
            ')'.format(
-      cmd = self.cmd,
-      counter = self.counter,
-      param = self.param,
-      data = self.data,
+      cmd     = repr(self.cmd),
+      counter = repr(self.counter),
+      param   = repr(self.param),
+      data    = repr(self.data),
+      inclk   = repr(self.inclk),
+      locked  = repr(self.locked),
+      busy    = repr(self.busy),
     )
 
 
