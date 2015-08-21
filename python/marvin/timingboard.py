@@ -263,38 +263,38 @@ class TimingBoard(fpga.Board):
 
     self.write('reg', self.REGS['CONFIG'], cval)
 
-    @property
-    def counter(self):
-      """
-      Reads the counter registers.
-      
-      :return: an asynchronous reading of the current time stamp value
-      """
-      hi0 = self.read('reg', self.REGS['TIME_HI']).astype(np.uint32)
-      while True:
-        lo = self.read('reg', self.REGS['TIME_LO']).astype(np.uint32)
-        hi1 = self.read('reg', self.REGS['TIME_HI']).astype(np.uint32)
-        if hi0 == hi1:
-          break
-        hi0 = hi1
+  @property
+  def counter(self):
+    """
+    Reads the counter registers.
+    
+    :return: an asynchronous reading of the current time stamp value
+    """
+    hi0 = self.read('reg', self.REGS['TIME_HI']).astype(np.uint32)
+    while True:
+      lo = self.read('reg', self.REGS['TIME_LO']).astype(np.uint32)
+      hi1 = self.read('reg', self.REGS['TIME_HI']).astype(np.uint32)
+      if hi0 == hi1:
+        break
+      hi0 = hi1
 
-      return long(hi0) << 32 | long(lo)
+    return long(hi0) << 32 | long(lo)
 
-    @property
-    def step(self):
-      """
-      Reads the STEP register.
-      
-      :return: the number of steps completed
-      """
-      return self.read('reg', self.REGS['STEP']).astype(np.uint32)
+  @property
+  def step(self):
+    """
+    Reads the STEP register.
+    
+    :return: the number of steps completed
+    """
+    return self.read('reg', self.REGS['STEP']).astype(np.uint32)
 
-    @property
-    def repetition(self):
-      """
-      Reads the N_REPS register.
-      
-      :return: the number of repetitions completed
-      """
-      return self.read('reg', self.REGS['N_REPS']).astype(np.uint32)
+  @property
+  def repetition(self):
+    """
+    Reads the N_REPS register.
+    
+    :return: the number of repetitions completed
+    """
+    return self.read('reg', self.REGS['N_REPS']).astype(np.uint32)
 
