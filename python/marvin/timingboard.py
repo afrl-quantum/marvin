@@ -268,7 +268,7 @@ class TimingBoard(fpga.Board):
     """
     Reads the counter registers.
     
-    :return: an asynchronous reading of the current time stamp value
+    :return: an asynchronous reading of the time stamp value
     """
     hi0 = self.read('reg', self.REGS['TIME_HI']).astype(np.uint32)
     while True:
@@ -287,7 +287,7 @@ class TimingBoard(fpga.Board):
     
     :return: the number of steps completed
     """
-    return self.read('reg', self.REGS['STEP']).astype(np.uint32)
+    return self.read('reg', self.REGS['STEP']).tolist()
 
   @property
   def repetition(self):
@@ -296,5 +296,5 @@ class TimingBoard(fpga.Board):
     
     :return: the number of repetitions completed
     """
-    return self.read('reg', self.REGS['N_REPS']).astype(np.uint32)
+    return self.read('reg', self.REGS['N_REPS']).astype(np.uint32).tolist()
 
