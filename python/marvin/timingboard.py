@@ -98,6 +98,7 @@ class TimingBoard(fpga.Board):
            'OUTPUT_D': 0x003c,
            'TIME_HI':  0x0040,
            'TIME_LO':  0x0044,
+           'MEM_RDBK': 0x0074,
            'DEBUG':    0x0078,
            'VERSION':  0x007c }
 
@@ -221,16 +222,18 @@ class TimingBoard(fpga.Board):
   @property
   def debug(self):
     """
-    Reads the DEBUG register.
+    Reads the debugging registers.
     
     :return: a dict of debug bit names and their boolean value (True or False)
     """
     d = self.read('reg', self.REGS['DEBUG']).astype(np.uint32)
+    m = self.read('reg', self.REGS['MEM_RDBK']).astype(np.uint32)
 
     bits = dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG_BITS.viewitems()])
     bits['DecodeAddr'] = (d & self.DEBUG_BITS['DecodeAddr']) >> 7
 #    bits['System_FState'] = ((d & self.DEBUG_BITS['System_FState']) >> 15)
     bits['Core_FState'] = (d >> 23)
+    bits['Last_Word_Read'] = hex(m)
     return bits
 
   def config(self, number_transitions, use_10_MHz=False, auto_trigger=False, external_trigger=False):
@@ -259,4 +262,39 @@ class TimingBoard(fpga.Board):
       cval |= self.CONFIG_BITS['TRIG_ENABLE']
 
     self.write('reg', self.REGS['CONFIG'], cval)
+
+    @property
+    def counter(self):
+      """
+      Reads the counter registers.
+      
+      :return: an asynchronous reading of the current time stamp value
+      """
+      hi0 = self.read('reg', self.REGS['TIME_HI']).astype(np.uint32)
+      while True:
+        lo = self.read('reg', self.REGS['TIME_LO']).astype(np.uint32)
+        hi1 = self.read('reg', self.REGS['TIME_HI']).astype(np.uint32)
+        if hi0 == hi1:
+          break
+        hi0 = hi1
+
+      return long(hi0) << 32 | long(lo)
+
+    @property
+    def step(self):
+      """
+      Reads the STEP register.
+      
+      :return: the number of steps completed
+      """
+      return self.read('reg', self.REGS['STEP']).astype(np.uint32)
+
+    @property
+    def repetition(self):
+      """
+      Reads the N_REPS register.
+      
+      :return: the number of repetitions completed
+      """
+      return self.read('reg', self.REGS['N_REPS']).astype(np.uint32)
 
