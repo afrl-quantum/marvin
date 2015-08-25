@@ -62,16 +62,20 @@ class TimingBoard(fpga.Board):
                   'ERR_BAD_DURATION':        0x0040,
                   'ERR_BAD_PCI_ACCESS':      0x0080,
                   'WARN_BAD_REFCLK':         0x0100,
-                  'WARN_NO_PXI_CLOCK':       0x0200 }
+                  'WARN_NO_PXI_CLOCK':       0x0200,
+                  'BUG_BAD_RAM_ACCESS':      0x0400,
+                  'BUG_FIFO_UNDERFLOW':      0x0800 }
 
   DEBUG_BITS = { 'Buffer_Empty':      0x0001,
                  'PCI_Allowed':       0x0002,
                  'Run_Timer':         0x0004,
                  'Load_Instructions': 0x0008,
                  'Dynamic_Output':    0x0010,
-                 'DecodeAddr':    0x007fff80,
+
+                 'FetchAddr':     0x007fff80,
                  'System_FState': 0x007f8000,
-                 'Core_FState':   0xff800000 }
+                 'Core_FState':   0x07800000,
+                 'Fifo_Level':    0x38000000}
 
   COMMANDS = { 'NOOP':    0,
                'ARM':     1,
@@ -98,6 +102,7 @@ class TimingBoard(fpga.Board):
            'OUTPUT_D': 0x003c,
            'TIME_HI':  0x0040,
            'TIME_LO':  0x0044,
+           'CUR_INSTR':0x0070,
            'MEM_RDBK': 0x0074,
            'DEBUG':    0x0078,
            'VERSION':  0x007c }
@@ -226,14 +231,14 @@ class TimingBoard(fpga.Board):
     
     :return: a dict of debug bit names and their boolean value (True or False)
     """
-    d = self.read('reg', self.REGS['DEBUG']).astype(np.uint32)
-    m = self.read('reg', self.REGS['MEM_RDBK']).astype(np.uint32)
+    i, m, d = self.read('reg', self.REGS['CUR_INSTR'], count=3).astype(np.uint32)
 
     bits = dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG_BITS.viewitems()])
-    bits['DecodeAddr'] = (d & self.DEBUG_BITS['DecodeAddr']) >> 7
+    bits['FetchAddr'] = (d & self.DEBUG_BITS['FetchAddr']) >> 7
 #    bits['System_FState'] = ((d & self.DEBUG_BITS['System_FState']) >> 15)
-    bits['Core_FState'] = (d >> 23)
+    bits['Core_FState'] = (d & self.DEBUG_BITS['Core_FState']) >> 23
     bits['Last_Word_Read'] = hex(m)
+    bits['Current_Instruction'] = hex(i)
     return bits
 
   def config(self, number_transitions, use_10_MHz=False, auto_trigger=False, external_trigger=False):
