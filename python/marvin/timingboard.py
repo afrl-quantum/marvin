@@ -75,7 +75,7 @@ class TimingBoard(fpga.Board):
                  'FetchAddr':     0x007fff80,
                  'System_FState': 0x007f8000,
                  'Core_FState':   0x07800000,
-                 'Fifo_Level':    0x38000000}
+                 'Fifo_Level':    0x78000000}
 
   COMMANDS = { 'NOOP':    0,
                'ARM':     1,
