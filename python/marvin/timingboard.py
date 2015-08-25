@@ -237,6 +237,7 @@ class TimingBoard(fpga.Board):
     bits['FetchAddr'] = (d & self.DEBUG_BITS['FetchAddr']) >> 7
 #    bits['System_FState'] = ((d & self.DEBUG_BITS['System_FState']) >> 15)
     bits['Core_FState'] = (d & self.DEBUG_BITS['Core_FState']) >> 23
+    bits['Fifo_Level'] = (d & self.DEBUG_BITS['Fifo_Level']) >> 27)
     bits['Last_Word_Read'] = hex(m)
     bits['Current_Instruction'] = hex(i)
     return bits
