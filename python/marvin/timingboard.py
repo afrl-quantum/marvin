@@ -310,9 +310,9 @@ class TimingBoard(fpga.Board):
   @property
   def repetition(self):
     """
-    Reads the N_REPS register.
+    Reads the REPCNT register.
     
     :return: the number of repetitions completed
     """
-    return self.read('reg', self.REGS['N_REPS']).astype(np.uint32).tolist()
+    return self.read('reg', self.REGS['REPCNT']).astype(np.uint32).tolist()
 
