@@ -248,13 +248,15 @@ class TimingBoard(fpga.Board):
     bits['Current_Instruction'] = hex(i)
     return bits
 
-  def config(self, number_transitions, use_10_MHz=False,
-             auto_trigger=False, external_trigger=False,
-             fifo_self_test=False):
+  def config(self, number_transitions, repetitions=0,
+             use_10_MHz=False, auto_trigger=False,
+             external_trigger=False, fifo_self_test=False):
     """
     Sets the card configuration through the CONFIG register.
     
     :param number_transitions: the number of valid steps in the uploaded program
+    :param repetitions: the number of times to arm the sequence before returning to
+                        SETUP, default is 0 meaning re-arm forever
     :param use_10_MHz: True if the master timebase should be referenced from the PXI 10 MHz,
                        False if it should be referenced to the onboard 80 MHz oscillator
     :param auto_trigger: True if the card should automatically trigger itself when it is
@@ -280,6 +282,7 @@ class TimingBoard(fpga.Board):
       cval |= self.CONFIG_BITS['TRIG_ENABLE']
 
     self.write('reg', self.REGS['CONFIG'], cval)
+    self.write('reg', self.REGS['N_REPS'], repetitions)
 
   @property
   def counter(self):
