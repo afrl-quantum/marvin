@@ -66,7 +66,8 @@ class TimingBoard(fpga.Board):
                   'BUG_BAD_RAM_ACCESS':      0x0400,
                   'BUG_FIFO_UNDERFLOW':      0x0800,
                   'BUG_FETCH_NO_LOAD':       0x1000,
-                  'BUG_LOAD_NO_FETCH':       0x2000 }
+                  'BUG_LOAD_NO_FETCH':       0x2000,
+                  'BUG_FIFO_OVERFLOW':       0x4000 }
 
   DEBUG_BITS = { 'Buffer_Empty':      0x0001,
                  'PCI_Allowed':       0x0002,
