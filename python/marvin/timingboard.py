@@ -44,9 +44,10 @@ class TimingBoard(fpga.Board):
     # verify that it is a timing board
     self.version
     
-  CONFIG_BITS = { 'TRIG_ENABLE':  0x0001,
-                  'REFCLK_10MHz': 0x0002,
-                  'AUTO_TRIGGER': 0x0008 }
+  CONFIG_BITS = { 'TRIG_ENABLE':    0x0001,
+                  'REFCLK_10MHz':   0x0002,
+                  'FIFO_SELF_TEST': 0x0004,
+                  'AUTO_TRIGGER':   0x0008 }
 
   STATES = { 'SETUP':    0,
              'READY':    1,
@@ -67,7 +68,9 @@ class TimingBoard(fpga.Board):
                   'BUG_FIFO_UNDERFLOW':      0x0800,
                   'BUG_FETCH_NO_LOAD':       0x1000,
                   'BUG_LOAD_NO_FETCH':       0x2000,
-                  'BUG_FIFO_OVERFLOW':       0x4000 }
+                  'BUG_FIFO_OVERFLOW':       0x4000,
+                  'TFAIL_DUP_WORD_AFTER_FIFO': 0x00008000,
+                  'TFAIL_DUP_WORD_FROM_MEM':   0x00010000 }
 
   DEBUG_BITS = { 'Buffer_Empty':      0x0001,
                  'PCI_Allowed':       0x0002,
@@ -245,7 +248,9 @@ class TimingBoard(fpga.Board):
     bits['Current_Instruction'] = hex(i)
     return bits
 
-  def config(self, number_transitions, use_10_MHz=False, auto_trigger=False, external_trigger=False):
+  def config(self, number_transitions, use_10_MHz=False,
+             auto_trigger=False, external_trigger=False,
+             fifo_self_test=False):
     """
     Sets the card configuration through the CONFIG register.
     
@@ -257,6 +262,7 @@ class TimingBoard(fpga.Board):
                          before executing the sequence.
     :param external_trigger: True if the card should listen to the external trigger line,
                              False if it should only accept software triggers.
+    :param fifo_self_test: True if the card should enable the no-duplicate-words FIFO self test.
     """
 
     cval = number_transitions << 16
@@ -266,6 +272,9 @@ class TimingBoard(fpga.Board):
 
     if auto_trigger:
       cval |= self.CONFIG_BITS['AUTO_TRIGGER']
+
+    if fifo_self_test:
+      cval |= self.CONFIG_BITS['FIFO_SELF_TEST']
 
     if external_trigger:
       cval |= self.CONFIG_BITS['TRIG_ENABLE']
