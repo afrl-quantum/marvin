@@ -193,7 +193,7 @@ class TimingBoard(object):
 
     v = np.asarray(vals, dtype=np.uint32)
     addr /= 4
-    self._mem[addr:(addr+len(vals)] = v
+    self._mem[addr:(addr+len(vals))] = v
 
   def read(self, target, addr, count=1):
     """
