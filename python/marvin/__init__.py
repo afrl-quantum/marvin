@@ -1,5 +1,3 @@
 # vim: et:sw=2:ts=2:nowrap
 
-import fpga
-import pll
-import clib
+__all__ = ['fpga', 'pll', 'timingboard', 'timingboard_sim', 'exceptions']

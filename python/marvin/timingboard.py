@@ -1,16 +1,10 @@
 # vim: et:sw=2:ts=2:nowrap
 
 from . import fpga
+from .exceptions import NotATimingBoard
 
 import numpy as np
 import time
-
-class NotATimingBoard(Exception):
-  """
-  This exception is raised when the requested board address does not appear to actually
-  be a timing board.
-  """
-  pass
 
 class TimingBoard(fpga.Board):
   """
@@ -187,6 +181,7 @@ class TimingBoard(fpga.Board):
   def clear_errors(self, mask=None):
     """
     Clear latched errors.
+
     :param mask: None to clear all errors, or a list of error names to clear
     """
     if mask is not None:
