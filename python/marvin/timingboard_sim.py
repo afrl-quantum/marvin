@@ -29,7 +29,7 @@ class TimingBoard(object):
     """
     Set the static port values for when the sequence is not running.
     """
-    self._defaults = [porta_a, port_b, port_c, port_d]
+    self._defaults = [port_a, port_b, port_c, port_d]
 
   def set_pxi_routing(self, pxi0=None, pxi1=None, pxi2=None, pxi3=None, 
                             pxi4=None, pxi5=None, pxi6=None, pxi7=None):
