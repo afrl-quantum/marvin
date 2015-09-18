@@ -104,7 +104,7 @@ class TimingBoard(object):
     self._step += self._nr_transitions / 10
     if self._step >= self._nr_transitions:
       self._repetition += 1
-      if self._nr_repetitions == 0 or r < self._nr_repetitions:
+      if self._nr_repetitions == 0 or self._repetition < self._nr_repetitions:
         if self._auto_trigger:
           self._run()
         else:
