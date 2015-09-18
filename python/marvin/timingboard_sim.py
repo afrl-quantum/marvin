@@ -45,6 +45,7 @@ class TimingBoard(object):
     
     :return: a state string
     """
+    self._check_run_status()
     return self._state
 
   def _latch_error(self, err):
@@ -97,7 +98,7 @@ class TimingBoard(object):
     
     :return: True if the system is still 'running', False if it isn't
     """
-    if self.state != 'RUN':
+    if self._state != 'RUN':
       return False
 
     self._step += self._nr_transitions / 10
