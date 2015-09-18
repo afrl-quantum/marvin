@@ -86,7 +86,7 @@ class TimingBoard(object):
     """
     End a simulated run.
     """
-    self._state = 'STOP'
+    self._state = 'SETUP'
     self._repetition = 0
     self._step = 0
 
