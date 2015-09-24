@@ -171,3 +171,17 @@ class Board(object):
     valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
     self._call(function, self._handle, addr, valptr, size)
 
+    @property
+    def eeprom_status_string(self):
+      """
+      The EEPROM status string, as read from the board.
+      """
+      buf = ctypes.create_string_buffer(256)
+      self._call(GxFpga.GxFpgaGetEepromSummary, self._handle, buf, 256)
+      return buf.value
+
+    def load_from_eeprom(self):
+      """
+      Load the FPGA bitstream stored in EEPROM on the board.
+      """
+      self._call(GxFpga.GxFpgaLoadFromEeprom, self._handle)
