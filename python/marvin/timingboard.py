@@ -44,7 +44,6 @@ class TimingBoard(fpga.Board):
     self._pll = pll.Reconfig(weakref.proxy(self), self.REGS['PLL_CFG'], Fin=None)
     
   CONFIG_BITS = { 'TRIG_ENABLE':    0x0001,
-                  'REFCLK_10MHz':   0x0002,
                   'FIFO_SELF_TEST': 0x0004,
                   'AUTO_TRIGGER':   0x0008 }
 
@@ -62,7 +61,6 @@ class TimingBoard(fpga.Board):
                   'ERR_BAD_DURATION':        0x0040,
                   'ERR_BAD_PCI_ACCESS':      0x0080,
                   'WARN_BAD_REFCLK':         0x0100,
-                  'WARN_NO_PXI_CLOCK':       0x0200,
                   'BUG_BAD_RAM_ACCESS':      0x0400,
                   'BUG_FIFO_UNDERFLOW':      0x0800,
                   'BUG_FETCH_NO_LOAD':       0x1000,
