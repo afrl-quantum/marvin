@@ -1,10 +1,11 @@
 # vim: et:sw=2:ts=2:nowrap
 
-from . import fpga
+from . import fpga, pll
 from .exceptions import NotATimingBoard
 
 import numpy as np
 import time
+import weakref
 
 class TimingBoard(fpga.Board):
   """
@@ -37,6 +38,10 @@ class TimingBoard(fpga.Board):
 
     # verify that it is a timing board
     self.version
+
+    # avoid a reference-count cycle: the PLL controller needs to be able
+    # to talk to the board, but does not need to keep a strong reference to it
+    self._pll = pll.Reconfig(weakref.proxy(self), self.REGS['PLL_CFG'], Fin=None)
     
   CONFIG_BITS = { 'TRIG_ENABLE':    0x0001,
                   'REFCLK_10MHz':   0x0002,
@@ -102,6 +107,7 @@ class TimingBoard(fpga.Board):
            'OUTPUT_D': 0x003c,
            'TIME_HI':  0x0040,
            'TIME_LO':  0x0044,
+           'PLL_CFG':  0x0048,
            'CUR_INSTR':0x0070,
            'MEM_RDBK': 0x0074,
            'DEBUG':    0x0078,
@@ -265,7 +271,9 @@ class TimingBoard(fpga.Board):
     cval = number_transitions << 16
 
     if use_10_MHz:
-      cval |= self.CONFIG_BITS['REFCLK_10MHZ']
+      self._pll.Fin = 10
+    else:
+      self._pll.Fin = 80
 
     if auto_trigger:
       cval |= self.CONFIG_BITS['AUTO_TRIGGER']
