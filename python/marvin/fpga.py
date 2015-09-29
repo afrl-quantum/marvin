@@ -171,7 +171,7 @@ class Board(object):
     valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
     self._call(function, self._handle, addr, valptr, size)
 
-  def _call_summary(self, fn, buflen=256):
+  def _call_summary(self, fn, buflen=256, need_handle=True):
     """
     Call a GxFpgaGet*Summary() function which takes a handle,
     a string buffer, and the buffer's length.
@@ -181,7 +181,10 @@ class Board(object):
     :return: the fetched string
     """
     buf = ctypes.create_string_buffer(buflen)
-    self._call(fn, self._handle, buf, buflen)
+    if need_handle:
+        self._call(fn, self._handle, buf, buflen)
+    else:
+        self._call(fn, buf, buflen)
     return buf.value
 
   @property
@@ -204,7 +207,7 @@ class Board(object):
 
     :return: the driver information string
     """
-    return self._call_summary(GxFpga.GxFpgaGetDriverSummary)
+    return self._call_summary(GxFpga.GxFpgaGetDriverSummary, need_handle=False)
 
   @property
   def board_summary(self):
