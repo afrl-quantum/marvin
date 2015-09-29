@@ -171,17 +171,29 @@ class Board(object):
     valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
     self._call(function, self._handle, addr, valptr, size)
 
-    @property
-    def eeprom_status_string(self):
-      """
-      The EEPROM status string, as read from the board.
-      """
-      buf = ctypes.create_string_buffer(256)
-      self._call(GxFpga.GxFpgaGetEepromSummary, self._handle, buf, 256)
-      return buf.value
+  def _call_summary(self, fn, buflen=256):
+    """
+    Call a GxFpgaGet*Summary() function which takes a handle,
+    a string buffer, and the buffer's length.
 
-    def load_from_eeprom(self):
-      """
-      Load the FPGA bitstream stored in EEPROM on the board.
-      """
-      self._call(GxFpga.GxFpgaLoadFromEeprom, self._handle)
+    :param fn: the GxFpga function to call
+    :param buflen: the size of the string buffer to use
+    :return: the fetched string
+    """
+    buf = ctypes.create_string_buffer(buflen)
+    self._call(fn, self._handle, buf, buflen)
+    return buf.value
+
+  @property
+  def eeprom_summary(self):
+    """
+    The EEPROM status string, as read from the board.
+    """
+    return self._call_summary(GxFpga.GxFpgaGetEepromSummary)
+
+  def load_from_eeprom(self):
+    """
+    Load the FPGA bitstream stored in EEPROM on the board.
+    """
+    self._call(GxFpga.GxFpgaLoadFromEeprom, self._handle)
+
