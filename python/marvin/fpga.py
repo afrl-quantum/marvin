@@ -200,11 +200,16 @@ class Board(object):
   @property
   def driver_summary(self):
     """
-    The Marvin Test GxFpga driver info, as a string.
+    The Marvin Test GxFpga driver info.
 
-    :return: the driver information string
+    :return: the driver information tuple(string, major_version, minor_version)
     """
-    return self._call_summary(GxFpga.GxFpgaGetDriverSummary)
+    buflen = 256
+    buf = ctypes.create_string_buffer(buflen)
+    ver = ctypes.c_uint32()
+    self._call(GxFpga.GxFpgaGetDriverSummary, buf, buflen, ctypes.byref(ver))
+
+    return (buf.value, ver >> 16, ver & 0xffff)
 
   @property
   def board_summary(self):
