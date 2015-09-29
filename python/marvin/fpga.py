@@ -197,3 +197,20 @@ class Board(object):
     """
     self._call(GxFpga.GxFpgaLoadFromEeprom, self._handle)
 
+  @property
+  def driver_summary(self):
+    """
+    The Marvin Test GxFpga driver info, as a string.
+
+    :return: the driver information string
+    """
+    return self._call_summary(GxFpga.GxFpgaGetDriverSummary)
+
+  @property
+  def board_summary(self):
+    """
+    The board summary information as a string.
+
+    :return: the board summary string
+    """
+    return self._call_summary(GxFpga.GxFpgaGetBoardSummary)
