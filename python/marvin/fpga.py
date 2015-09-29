@@ -208,6 +208,7 @@ class Board(object):
     buf = ctypes.create_string_buffer(buflen)
     ver = ctypes.c_uint32()
     self._call(GxFpga.GxFpgaGetDriverSummary, buf, buflen, ctypes.byref(ver))
+    ver = ver.value
 
     return (buf.value, ver >> 16, ver & 0xffff)
 
