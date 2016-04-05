@@ -6,36 +6,36 @@ _libraries['libGxPRes.so'] = CDLL('libGxPRes.so')
 
 
 # VOID = void # alias
-GT_BOARD_INVALID_EEPROM = -10 # Variable c_int '-0x00000000a'
+GT_BOARD_INVALID_EEPROM = -10 # Variable c_int '-0x0000000000000000a'
 GT_NO_ERROR = 0 # Variable c_int '0'
 GXPRES_PANEL_MODAL = 1 # Variable c_int '1'
-GT_UNABLE_REGISTER_DEVICE = -5 # Variable c_int '-0x000000005'
-GT_INVALID_SLOT = -22 # Variable c_int '-0x000000016'
-GT_UNABLE_TO_GETTIMER = -9 # Variable c_int '-0x000000009'
-GT_CANT_OPEN_HW = -1 # Variable c_int '-0x000000001'
-GT_INVALID_STRLEN = -24 # Variable c_int '-0x000000018'
-GT_UNABLE_ALLOC_DEVICE_RESOURCE = -6 # Variable c_int '-0x000000006'
-GT_UNABLE_CREATE_PANEL = -8 # Variable c_int '-0x000000008'
-GT_INVALID_ERROR = -20 # Variable c_int '-0x000000014'
-GT_BOARD_NOT_EXIST = -2 # Variable c_int '-0x000000002'
-GT_SLOT_NOT_CONFIG = -4 # Variable c_int '-0x000000004'
-GXPRES_INVALID_MODE = -42 # Variable c_int '-0x00000002a'
+GT_UNABLE_REGISTER_DEVICE = -5 # Variable c_int '-0x00000000000000005'
+GT_INVALID_SLOT = -22 # Variable c_int '-0x00000000000000016'
+GT_UNABLE_TO_GETTIMER = -9 # Variable c_int '-0x00000000000000009'
+GT_CANT_OPEN_HW = -1 # Variable c_int '-0x00000000000000001'
+GT_INVALID_STRLEN = -24 # Variable c_int '-0x00000000000000018'
+GT_UNABLE_ALLOC_DEVICE_RESOURCE = -6 # Variable c_int '-0x00000000000000006'
+GT_UNABLE_CREATE_PANEL = -8 # Variable c_int '-0x00000000000000008'
+GT_INVALID_ERROR = -20 # Variable c_int '-0x00000000000000014'
+GT_BOARD_NOT_EXIST = -2 # Variable c_int '-0x00000000000000002'
+GT_SLOT_NOT_CONFIG = -4 # Variable c_int '-0x00000000000000004'
+GT_WRONG_BOARD = -3 # Variable c_int '-0x00000000000000003'
 GXPRES_PANEL_MODELESS = 0 # Variable c_int '0'
-GT_INVALID_PARAMETER = -21 # Variable c_int '-0x000000015'
-GXPRES_INVALID_VALUE = -43 # Variable c_int '-0x00000002b'
-GXPRES_INVALID_CHANNEL = -40 # Variable c_int '-0x000000028'
-GT_UNABLE_ALLOC_MEMORY = -7 # Variable c_int '-0x000000007'
-GT_WRONG_BOARD = -3 # Variable c_int '-0x000000003'
-GXPRES_INVALID_GROUP = -41 # Variable c_int '-0x000000029'
-GT_INVALID_HANDLE = -23 # Variable c_int '-0x000000017'
+GT_INVALID_PARAMETER = -21 # Variable c_int '-0x00000000000000015'
+GXPRES_INVALID_VALUE = -43 # Variable c_int '-0x0000000000000002b'
+GXPRES_INVALID_CHANNEL = -40 # Variable c_int '-0x00000000000000028'
+GT_UNABLE_ALLOC_MEMORY = -7 # Variable c_int '-0x00000000000000007'
+GXPRES_INVALID_GROUP = -41 # Variable c_int '-0x00000000000000029'
+GXPRES_INVALID_MODE = -42 # Variable c_int '-0x0000000000000002a'
+GT_INVALID_HANDLE = -23 # Variable c_int '-0x00000000000000017'
 CHAR = c_char
 BYTE = c_ubyte
 SHORT = c_short
 WORD = c_ushort
 INT = c_int
 UINT = c_uint
-LONG = c_long
-DWORD = c_ulong
+LONG = c_int
+DWORD = c_uint
 DDWORD = c_ulonglong
 DOUBLE = c_double
 BOOL = c_int
@@ -105,13 +105,13 @@ __all__ = ['GT_BOARD_INVALID_EEPROM', 'Gx1164GetChannelRelays',
            'LONG', 'Gx1164SetDoubleChannelResistance', 'PSHORT',
            'Gx1164GetChannelMode', 'GT_INVALID_PARAMETER',
            'GT_INVALID_ERROR', 'Gx1164SetWiperMode',
-           'Gx1164GetChannelResistanceRange', 'CHAR',
+           'Gx1164GetChannelResistanceRange', 'CHAR', 'PWORD',
            'Gx1164InitializeVisa', 'GT_BOARD_NOT_EXIST', 'PBOOL',
            'Gx1164GetDoubleChannelResistance', 'PSTR',
            'Gx1164SetChannelRelays', 'GT_SLOT_NOT_CONFIG',
-           'GXPRES_INVALID_MODE', 'GXPRES_PANEL_MODELESS',
+           'GT_WRONG_BOARD', 'GXPRES_PANEL_MODELESS',
            'GT_UNABLE_CREATE_PANEL', 'PDOUBLE', 'WORD', 'BYTE',
            'GXPRES_INVALID_VALUE', 'GXPRES_INVALID_CHANNEL', 'PVOID',
            'INT', 'GT_UNABLE_ALLOC_MEMORY', 'PBYTE', 'PDDWORD',
-           'GT_WRONG_BOARD', 'GXPRES_INVALID_GROUP', 'BOOL', 'PWORD',
+           'GXPRES_INVALID_GROUP', 'GXPRES_INVALID_MODE', 'BOOL',
            'DOUBLE', 'UINT', 'GT_INVALID_HANDLE', 'PLONG']
