@@ -228,7 +228,7 @@ class TimingBoard(fpga.Board):
     if (ver & 0xffff0000) != 0xafd00000:
       raise NotATimingBoard()
 
-    githash = self.read('reg', self.REGS['GIT_HASH']).astype(np.uint32)
+    githash = int(self.read('reg', self.REGS['GIT_HASH']).astype(np.uint32))
 
     return ((ver & 0xff00) >> 8, (ver & 0xff), '{:x}'.format(githash))
 
