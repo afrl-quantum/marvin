@@ -41,7 +41,7 @@ class TimingBoard(fpga.Board):
 
     # avoid a reference-count cycle: the PLL controller needs to be able
     # to talk to the board, but does not need to keep a strong reference to it
-    self._pll = pll.Reconfig(weakref.proxy(self), self.REGS['PLL_CFG'], Fin=None)
+    self._pll = pll.Reconfig(weakref.proxy(self), self.REGS['PLL_CFG'], Fin=80)
 
   CONFIG_BITS = { 'TRIG_ENABLE':    0x0001,
                   'FIFO_SELF_TEST': 0x0004,
