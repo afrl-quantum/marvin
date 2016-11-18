@@ -3,7 +3,7 @@
 Small example code of using marvin.ao module to talk to GX1649 card
 """
 import marvin
-b = marvin.ao.Board(0x030f)
+b = marvin.ao.Board(0x020a)
 groupA = b[0] # or you can do groupA = b['a']
 cA0 = groupA[0]
 
