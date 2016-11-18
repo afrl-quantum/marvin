@@ -106,6 +106,7 @@ class TimingBoard(fpga.Board):
            'TIME_HI':  0x0040,
            'TIME_LO':  0x0044,
            'PLL_CFG':  0x0048,
+           'GIT_HASH': 0x0068,
            'CUR_INSTR':0x0070,
            'MEM_RDBK': 0x0074,
            'DEBUG':    0x0078,
@@ -221,13 +222,15 @@ class TimingBoard(fpga.Board):
     """
     Read the VERSION register.
     
-    :return: a tuple (major-version, minor-version)
+    :return: a tuple (major-version, minor-version, git-hash)
     """
     ver = self.read('reg', self.REGS['VERSION']).astype(np.uint32)
     if (ver & 0xffff0000) != 0xafd00000:
       raise NotATimingBoard()
 
-    return ((ver & 0xff00) >> 8, (ver & 0xff))
+    githash = self.read('reg', self.REGS['GIT_HASH']).astype(np.uint32)
+
+    return ((ver & 0xff00) >> 8, (ver & 0xff), githash)
 
   @property
   def debug(self):

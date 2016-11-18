@@ -161,7 +161,7 @@ class TimingBoard(object):
     
     :return: a tuple of (major, minor) version numbers
     """
-    return (0, 255)
+    return (0, 255, 0xdeadbeef)
 
   @property
   def debug(self):
