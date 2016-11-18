@@ -230,7 +230,7 @@ class TimingBoard(fpga.Board):
 
     githash = self.read('reg', self.REGS['GIT_HASH']).astype(np.uint32)
 
-    return ((ver & 0xff00) >> 8, (ver & 0xff), githash)
+    return ((ver & 0xff00) >> 8, (ver & 0xff), '{:x}'.format(githash))
 
   @property
   def debug(self):
