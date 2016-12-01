@@ -49,7 +49,7 @@ class TimingBoard(fpga.Board):
 
     # avoid a reference-count cycle: the PLL controller needs to be able
     # to talk to the board, but does not need to keep a strong reference to it
-    self._pll = pll.Reconfig(weakref.proxy(self), self.REGS['PLL_CFG'], Fin=None)
+    self._pll = pll.Reconfig(weakref.proxy(self), self.REGS['PLL_CFG'], Fin=80)
 
   CONFIG_BITS = { 'TRIG_ENABLE':    1 << 0,
                   'TRIG_INVERT':    1 << 1,
@@ -239,7 +239,7 @@ class TimingBoard(fpga.Board):
     if (ver & 0xffff0000) != 0xafd00000:
       raise NotATimingBoard()
 
-    githash = self.read('reg', self.REGS['GIT_HASH']).astype(np.uint32)
+    githash = int(self.read('reg', self.REGS['GIT_HASH']).astype(np.uint32))
 
     return ((ver & 0xff00) >> 8, (ver & 0xff), '{:x}'.format(githash))
 
