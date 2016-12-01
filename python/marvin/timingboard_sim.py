@@ -174,7 +174,8 @@ class TimingBoard(object):
 
   def config(self, number_transitions, repetitions=0,
              use_10_MHz=False, auto_trigger=False,
-             external_trigger=False, fifo_self_test=False):
+             external_trigger=False, invert_external_trigger=False,
+             external_trigger_type='edge', fifo_self_test=False):
     """
     Set the card configuration.
     """

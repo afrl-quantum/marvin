@@ -13,6 +13,13 @@ class TimingBoard(fpga.Board):
   GX3500 FPGA board.
   """
 
+  # Define the firmware compatibility as an exact version. Hence, generally, it
+  # is preferable that the firmware major/minor version numbers only be
+  # incremented if an interface has changed.  This approach is fine, since the
+  # git-hash is also stored in the firmware to identify the exact version of the
+  # firmware.
+  FIRMWARE_COMPATIBILITY = (0,97)
+
   def __init__(self, slot, bitstream_file=None, progress=None):
     """
     Bind a TimingBoard to a PCI/PXI slot, uploading a specific
@@ -36,16 +43,20 @@ class TimingBoard(fpga.Board):
         except NotATimingBoard:
           time.sleep(1.0)
 
-    # verify that it is a timing board
-    self.version
+    # verify that it is a compatible timing board
+    assert self.version == self.FIRMWARE_COMPATIBILITY, \
+      'Incompatible timingboard firmware version found'
 
     # avoid a reference-count cycle: the PLL controller needs to be able
     # to talk to the board, but does not need to keep a strong reference to it
     self._pll = pll.Reconfig(weakref.proxy(self), self.REGS['PLL_CFG'], Fin=None)
 
-  CONFIG_BITS = { 'TRIG_ENABLE':    0x0001,
-                  'FIFO_SELF_TEST': 0x0004,
-                  'AUTO_TRIGGER':   0x0008 }
+  CONFIG_BITS = { 'TRIG_ENABLE':    1 << 0,
+                  'TRIG_INVERT':    1 << 1,
+                  'TRIG_TYPE':      1 << 2,
+                  'AUTO_TRIGGER':   1 << 3,
+                  'FIFO_SELF_TEST': 1 << 4,
+                }
 
   STATES = { 'SETUP':    0,
              'READY':    1,
@@ -252,7 +263,8 @@ class TimingBoard(fpga.Board):
 
   def config(self, number_transitions, repetitions=0,
              use_10_MHz=False, auto_trigger=False,
-             external_trigger=False, fifo_self_test=False):
+             external_trigger=False, invert_external_trigger=False,
+             external_trigger_type='edge', fifo_self_test=False):
     """
     Sets the card configuration through the CONFIG register.
     
@@ -266,6 +278,13 @@ class TimingBoard(fpga.Board):
                          before executing the sequence.
     :param external_trigger: True if the card should listen to the external trigger line,
                              False if it should only accept software triggers.
+    :param invert_external_trigger: True if the external trigger signal should be inverted,
+                                    False if the external trigger signal should
+                                    not be inverted.
+    :param external_trigger_type: 'edge' if the external trigger signal should
+                                  be effective at a transition,
+                                  'level' if the external trigger signal should
+                                  be effective at a high (or low) setting.
     :param fifo_self_test: True if the card should enable the no-duplicate-words FIFO self test.
     """
 
@@ -284,6 +303,14 @@ class TimingBoard(fpga.Board):
 
     if external_trigger:
       cval |= self.CONFIG_BITS['TRIG_ENABLE']
+
+    if invert_external_trigger:
+      cval |= self.CONFIG_BITS['TRIG_INVERT']
+
+    if external_trigger_type != 'edge':
+      assert external_trigger_type == 'level', 'Trigger type neither edge nor level'
+      cval |= self.CONFIG_BITS['TRIG_TYPE']
+
 
     self.write('reg', self.REGS['CONFIG'], cval)
     self.write('reg', self.REGS['N_REPS'], repetitions)
