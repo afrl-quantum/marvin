@@ -44,8 +44,11 @@ class TimingBoard(fpga.Board):
           time.sleep(1.0)
 
     # verify that it is a compatible timing board
-    assert self.version == self.FIRMWARE_COMPATIBILITY, \
-      'Incompatible timingboard firmware version found'
+    if self.version[:2] != self.FIRMWARE_COMPATIBILITY:
+      raise NotImplementedError(
+        'Incompatible timingboard firmware version found ({}); expected ({})'
+        .format(self.version, self.FIRMWARE_COMPATIBILITY)
+      )
 
     # avoid a reference-count cycle: the PLL controller needs to be able
     # to talk to the board, but does not need to keep a strong reference to it
