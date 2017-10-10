@@ -72,11 +72,14 @@ class Board(object):
     
     return buf.value
   
-  def load_program(self, filename, target='volatile', progress=None):
+  def load_program(self, filename, target='volatile', progress='stdout'):
     """
-    Load a Serial Vector Format (.svf) bitstream file to the FPGA.
+    Load a bitstream file to either the FPGA or the FPGA EEPROM.
+    If loading directly to the FPGA, the file must be a Serial Vector Format
+    (.svf) bitstream file.
+    If loading directly to the FPGA EEPROM, the file must be a (.rpd) bitstream file.
     
-    :param filename: the path to the target .svf file
+    :param filename: the path to the target .svf|.rpd file
     :param target: which storage to load the bitstream into, either 'volatile' or 'eeprom'.
     :param progress: how to handle load progress notifications. May be None for 
                      silent, 'stdout' for a textual progress report on stdout, or
