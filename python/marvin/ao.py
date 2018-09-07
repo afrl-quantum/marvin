@@ -7,6 +7,8 @@ import os.path
 import sys
 import time
 
+from six.moves import range
+
 from .clib import GxAo
 
 
@@ -100,7 +102,7 @@ class Board(object):
     handle = ctypes.c_short(0)
     self._call(GxAo.GxAoInitialize, slot, byref(handle))
     self._handle = handle
-    self.groups = [ Group(self, i) for i in xrange(4) ]
+    self.groups = [ Group(self, i) for i in range(4) ]
     self.name = self.board_summary.split()[0]
 
   def __getitem__(self, i):
@@ -248,7 +250,7 @@ class Group(object):
     self._board = board
     self._group = group
 
-    self.channels = [ Channel(self, i) for i in xrange(16) ]
+    self.channels = [ Channel(self, i) for i in range(16) ]
 
   def __getitem__(self, i):
     return self.channels[i]
@@ -365,7 +367,7 @@ class Group(object):
       value = self._board.TRIGGER_SOURCES_reverse[value]
     except KeyError:
       raise AoError('expected trigger source to be one of {}'
-                    .format(self._board.TRIGGER_SOURCES.values()))
+                    .format(list(self._board.TRIGGER_SOURCES.values())))
     self._call(GxAo.GxAoArbSetGroupTrigger, value)
 
   def trigger(self):
@@ -468,7 +470,7 @@ class Group(object):
   @property
   def waveform_channels(self):
     V = self.get_waveform_params()['channels']
-    return [i for i in xrange(16) if (V&(1<<i))]
+    return [i for i in range(16) if (V&(1<<i))]
 
   @waveform_channels.setter
   def waveform_channels(self, value):
@@ -552,7 +554,7 @@ class Group(object):
       clock = self._board.CLOCK_SOURCES_reverse[value]
     except KeyError:
       raise AoError('expected clock source to be one of {}'
-                    .format(self._board.CLOCK_SOURCES.values()))
+                    .format(list(self._board.CLOCK_SOURCES.values())))
     self._call(GxAo.GxAoArbSetGroupClock, clock, freq)
 
 

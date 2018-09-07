@@ -3,9 +3,12 @@
 from . import fpga, pll
 from .exceptions import NotATimingBoard
 
+from six.moves import range, reduce
+
 import numpy as np
 import time
 import weakref
+#from functools import reduce
 
 class TimingBoard(fpga.Board):
   """
@@ -36,7 +39,7 @@ class TimingBoard(fpga.Board):
       self.load_program(bitstream_file, target='volatile', progress=progress)
     
       # wait up to 15 seconds for the card to reset and identify as a timing board
-      for i in xrange(15):
+      for i in range(15):
         try:
           self.version
           return
@@ -194,7 +197,7 @@ class TimingBoard(fpga.Board):
     s = self.read('reg', self.REGS['STATUS']).astype(np.uint32)
     s &= ~0x000f # ignore state bits and PCI_PERMITTED
 
-    errs = [ k for k, v in self.STATUS_BITS.viewitems() if (s & v) != 0 ]
+    errs = [ k for k, v in self.STATUS_BITS.items() if (s & v) != 0 ]
     return errs
 
   def clear_errors(self, mask=None):
@@ -255,7 +258,7 @@ class TimingBoard(fpga.Board):
     """
     i, m, d = self.read('reg', self.REGS['CUR_INSTR'], count=3).astype(np.uint32)
 
-    bits = dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG_BITS.viewitems()])
+    bits = dict([ (name, (d & bit) == bit) for (name, bit) in self.DEBUG_BITS.items()])
     bits['FetchAddr'] = (d & self.DEBUG_BITS['FetchAddr']) >> 7
 #    bits['System_FState'] = ((d & self.DEBUG_BITS['System_FState']) >> 15)
     bits['Core_FState'] = (d & self.DEBUG_BITS['Core_FState']) >> 23
@@ -333,7 +336,7 @@ class TimingBoard(fpga.Board):
         break
       hi0 = hi1
 
-    return long(hi0) << 32 | long(lo)
+    return int(hi0) << 32 | int(lo)
 
   @property
   def step(self):

@@ -2,6 +2,8 @@
 
 from ctypes import Structure, c_uint32
 import numpy as np
+from six.moves import range, reduce
+# from functools.import reduce
 
 __all__ = ['ReconfigRegister', 'Reconfig']
 
@@ -56,7 +58,7 @@ class ReconfigRegister(c_uint32):
     pll_reset   = 0b101, # 5
     clk_switch  = 0b110, # 6
   )
-  REVERSE['cmd'] = { 0:{v:k for k,v in FORWARD['cmd'].viewitems()} }
+  REVERSE['cmd'] = { 0:{v:k for k,v in FORWARD['cmd'].items()} }
 
   #union with cmd: valid only on reads
   BIT0['locked']   = 0
@@ -84,7 +86,7 @@ class ReconfigRegister(c_uint32):
     #c8      = 0b1100,
     #c9      = 0b1101,
   )
-  REVERSE['counter'] = { 0:{v:k for k,v in FORWARD['counter'].viewitems()} }
+  REVERSE['counter'] = { 0:{v:k for k,v in FORWARD['counter'].items()} }
 
   BIT0['param'] = 7
   WIDTH['param'] = 3
@@ -123,8 +125,8 @@ class ReconfigRegister(c_uint32):
       },
     ]))
   )
-  REVERSE['param'] = { k0:{v:k for k,v in D.viewitems()}
-    for k0,D in ALL_PARAMS.viewitems()
+  REVERSE['param'] = { k0:{v:k for k,v in D.items()}
+    for k0,D in ALL_PARAMS.items()
   }
   FORWARD['param'] = reduce(lambda D,d: Dict(D,**d), [{}]+ ALL_PARAMS.values())
 
@@ -138,7 +140,7 @@ class ReconfigRegister(c_uint32):
     '80' : 0b0, #MHz
     '10' : 0b1, #MHz
   }
-  REVERSE['inclk'] = { 0:{v:k for k,v in FORWARD['inclk'].viewitems()} }
+  REVERSE['inclk'] = { 0:{v:k for k,v in FORWARD['inclk'].items()} }
 
 
   BIT0['other'] = 20
@@ -254,7 +256,7 @@ class Reconfig(object):
     self.output_counters = output_counters
     self._Fin = None
     self.Fin = Fin
-    self.Fvco_extrema = xrange(600, 1201)
+    self.Fvco_extrema = range(600, 1201)
 
   def _set(self, counter, param, value, reconfig=False):
     reg = ReconfigRegister(cmd='write',counter=counter,param=param,data=value)
@@ -440,7 +442,7 @@ class Reconfig(object):
     elif C > 511:
       raise RuntimeError('cannot such a low frequency')
     elif value != Fnew:
-      print 'WARNING:  setting to nearest acheivable frequency: {}'.format(Fnew)
+      print('WARNING: setting to nearest acheivable frequency: {}'.format(Fnew))
 
     if Fnew == F[clock]:
       pass
@@ -509,11 +511,11 @@ class FakeFpga(object):
 
     r = ReconfigRegister( data[0] )
     if r.cmd == 'reconfig':
-      print 'reconfigure!'
+      print('reconfigure!')
     elif r.cmd == 'reset':
-      print 'reset pll reconfig'
+      print('reset pll reconfig')
     elif r.cmd == 'pll_reset':
-      print 'reset pll'
+      print('reset pll')
     elif r.cmd == 'write':
       self.pll_registers[r.counter][r.param] = r.data
     elif r.cmd == 'read':
@@ -530,18 +532,18 @@ def run_test():
   fpga = FakeFpga()
 
   r = Reconfig( fpga, fpga.pll_addr, Fin=10, output_counters=['c0', 'c1'] )
-  print 'freqs: ', r.frequencies
+  print('freqs: ', r.frequencies)
   r.set_frequency( 'c0', 50 )
-  print 'freqs: ', r.frequencies
+  print('freqs: ', r.frequencies)
   r.set_frequency( 'c1', 100 )
-  print 'freqs: ', r.frequencies
+  print('freqs: ', r.frequencies)
   r.set_frequency( 'c1', 600 )
-  print 'freqs: ', r.frequencies
+  print('freqs: ', r.frequencies)
   r.set_frequency( 'c0', 51 )
-  print 'freqs: ', r.frequencies
+  print('freqs: ', r.frequencies)
   r.set_frequency( 'c0', 55 )
-  print 'freqs: ', r.frequencies
-  print 'status, busy: ', r.status, r.status.busy
+  print('freqs: ', r.frequencies)
+  print('status, busy: ', r.status, r.status.busy)
 
 if __name__ == '__main__':
   run_test()

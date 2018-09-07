@@ -1,5 +1,9 @@
 # vim: et:sw=2:ts=2:nowrap
 
+import sys
+if sys.version_info[0] == 3:
+  long = int
+
 import numpy as np
 import time
 
