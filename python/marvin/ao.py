@@ -493,7 +493,7 @@ class Group(object):
   def max_waveform_len(self):
     lwc = len(self.waveform_channels)
     if lwc > 0:
-      return (self._board.MAX_WAVEFORM_LEN/lwc)
+      return (self._board.MAX_WAVEFORM_LEN//lwc)
     return None
 
   def _get_clock(self):

@@ -339,11 +339,11 @@ class Reconfig(object):
       for c in self.output_counters
     }
 
-    vco  = (self.Fin * M) / N
+    vco  = (self.Fin * M) // N
     return Dict(
       Fin   = self.Fin,
       vco  = vco,
-      **{ c: vco / Ci for c,Ci in C.items() }
+      **{ c: vco // Ci for c,Ci in C.items() }
     )
 
 
@@ -366,8 +366,8 @@ class Reconfig(object):
 
     if self._Fin is not None:
       F = self.frequencies
-      #M_N_0 = F.vco / self._Fin
-      #M_N_1 = F.vco / value
+      #M_N_0 = F.vco // self._Fin
+      #M_N_1 = F.vco // value
       if F.vco != 600:
         raise NotImplementedError('Expecting F_vco == 600 MHz!')
 
@@ -435,7 +435,7 @@ class Reconfig(object):
       raise LookupError('Could not identify clock "{}"'.format(clock))
 
     C = int( round(F.vco / float(value)) )
-    Fnew = F.vco / C
+    Fnew = F.vco // C
 
     if C <= 0:
       raise RuntimeError('cannot increase frequency more than vco={}'.format(F.vco))
@@ -449,8 +449,8 @@ class Reconfig(object):
     elif C == 1:
       self.set( clock, bypass=1, high_count=1, low_count=0, odd=0 )
     else:
-      H = (C + 1)/2
-      L = (C    )/2
+      H = (C + 1)//2
+      L = (C    )//2
       odd = 1
       if H == L:
         odd=0

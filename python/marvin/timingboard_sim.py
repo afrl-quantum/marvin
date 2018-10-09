@@ -105,7 +105,7 @@ class TimingBoard(object):
     if self._state != 'RUN':
       return False
 
-    self._step += self._nr_transitions / 10
+    self._step += self._nr_transitions // 10
     if self._step >= self._nr_transitions:
       self._repetition += 1
       if self._nr_repetitions == 0 or self._repetition < self._nr_repetitions:
@@ -198,7 +198,7 @@ class TimingBoard(object):
       raise ValueError('only 32-bit aligned addresses are supported')
 
     v = np.asarray(vals, dtype=np.uint32)
-    addr /= 4
+    addr //= 4
     self._mem[addr:(addr+len(vals))] = v
 
   def read(self, target, addr, count=1):
@@ -211,7 +211,7 @@ class TimingBoard(object):
     if (addr % 4) != 0:
       raise ValueError('only 32-bit aligned addresses are supported')
 
-    addr /= 4
+    addr //= 4
     return self._mem[addr:(addr+count)].astype(np.int32)
 
   @property
