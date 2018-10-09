@@ -153,16 +153,30 @@ class Board(object):
     
     :param location: 'reg' (register space, BAR 1) or 'mem' (memory, BAR 2)
     :param addr: the address to write (must be a multiple of 4)
-    :param values: the 32-bit value(s) to write, as something coercable to a numpy.ndarray
+    :param values: the 32-bit value(s) to write, as something coercable to a
+                   numpy.ndarray or as some ctypes object.
     """
     
-    vals = np.asarray(values, dtype=np.uint32)
-    if vals.ndim == 0:
-      size = 4
-    elif vals.ndim == 1:
-      size = 4 * len(vals)
-    else:
-      raise ValueError('cannot write arrays of greater than 1 dimension')
+    try:
+      size = ctypes.sizeof(values)
+      if size % 4 != 0:
+        raise ValueError('data can only be written in multiples of 4 bytes')
+
+      try:
+        valptr = ctypes.cast(ctypes.pointer(values),
+                             ctypes.POINTER(ctypes.c_uint32))
+      except TypeError as e:
+        raise ValueError('values appear to be ctypes, but cast failed:' + e)
+
+    except TypeError:
+      vals = np.asarray(values, dtype=np.uint32)
+      if vals.ndim == 0:
+        size = 4
+      elif vals.ndim == 1:
+        size = 4 * len(vals)
+      else:
+        raise ValueError('cannot write arrays of greater than 1 dimension')
+      valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
     
     if location == 'reg':
       function = GxFpga.GxFpgaWriteRegister
@@ -171,7 +185,6 @@ class Board(object):
     else:
       raise ValueError("location must be 'reg' or 'mem'")
     
-    valptr = vals.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
     self._call(function, self._handle, addr, valptr, size)
 
   def _call_summary(self, fn, buflen=256):

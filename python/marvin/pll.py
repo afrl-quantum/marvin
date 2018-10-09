@@ -1,6 +1,6 @@
 # vim: et:sw=2:ts=2:nowrap
 
-from ctypes import Structure, c_uint32
+from ctypes import Structure, sizeof, cast, pointer, POINTER, c_uint32
 import numpy as np
 from six.moves import range, reduce
 # from functools.import reduce
@@ -19,7 +19,7 @@ class Dict(dict):
     super(Dict, self).__init__(*a,**kw)
     self.__dict__ = self
 
-class ReconfigRegister(c_uint32):
+class ReconfigRegister(Structure):
   """
   the layout of the reconfig register:
     register[2..0] : command ('read', 'write', 'reconfig', 'reset', 'pll_reset')
@@ -33,6 +33,8 @@ class ReconfigRegister(c_uint32):
     register[31..19]: unused
           
   """
+
+  _fields_ = [('value', c_uint32)]
 
   def __init__(self, *a,**kw):
     super(ReconfigRegister,self).__init__(*a)
@@ -505,11 +507,31 @@ class FakeFpga(object):
   def write(self, spc, addr, data):
     assert self.pll_spc == spc, 'Wrong address space'
     assert self.pll_addr == addr, 'Wrong address'
-    data = np.asarray( data, dtype=np.uint32 )
-    if len( data ) != 1:
-      raise RuntimeError('Should only write len()==1 arrays to pll register')
 
-    r = ReconfigRegister( data[0] )
+    try:
+      size = sizeof(data)
+      if size % 4 != 0:
+        raise ValueError('data can only be written in multiples of 4 bytes')
+
+      try:
+        valptr = cast(pointer(data), POINTER(c_uint32))
+      except TypeError as e:
+        raise ValueError('values appear to be ctypes, but cast failed:' + e)
+
+    except TypeError:
+      vals = np.asarray(data, dtype=np.uint32)
+      if vals.ndim == 0:
+        size = 4
+      elif vals.ndim == 1:
+        size = 4 * len(vals)
+      else:
+        raise ValueError('cannot write arrays of greater than 1 dimension')
+      valptr = vals.ctypes.data_as(POINTER(c_uint32))
+
+    if size != 4:
+      raise RuntimeError('Should only write 4 bytes to pll register')
+
+    r = ReconfigRegister( valptr[0] )
     if r.cmd == 'reconfig':
       print('reconfigure!')
     elif r.cmd == 'reset':
