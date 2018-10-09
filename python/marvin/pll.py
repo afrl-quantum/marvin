@@ -95,9 +95,9 @@ class ReconfigRegister(Structure):
   ALL_PARAMS = Dict(
     cp_lf = Dict(
       # for charge pump / loop filter
-      cp_unused   = 0b101,
+      #cp_unused   = 0b101,
       cp_current  = 0b000,
-      lf_unused   = 0b100,
+      #lf_unused   = 0b100,
       lf_resistor = 0b001,
       lf_capacitor= 0b010,
     ),
@@ -130,7 +130,7 @@ class ReconfigRegister(Structure):
   REVERSE['param'] = { k0:{v:k for k,v in D.items()}
     for k0,D in ALL_PARAMS.items()
   }
-  FORWARD['param'] = reduce(lambda D,d: Dict(D,**d), [{}]+ ALL_PARAMS.values())
+  FORWARD['param'] = reduce(lambda D,d: Dict(D,**d), ALL_PARAMS.values())
 
   BIT0['data'] = 10
   WIDTH['data'] = 9
@@ -485,6 +485,7 @@ class FakeFpga(object):
       ),
       cp_lf = dict(
         lf_resistor = 27,
+        lf_capacitor = 0,
       ),
       vco = dict( vco_post_scale = 1 ),
       c0 = dict(
