@@ -1,0 +1,20 @@
+Source: marvin
+Section: universe/science
+Priority: optional
+Build-Depends: debhelper (>= 9), dh-python,
+ python3-setuptools, python3-all (>=3.2)
+Maintainer: Spencer E. Olson <olsonse@umich.edu>
+Standards-Version: 3.9.2
+Homepage: https://github.com/afrl-quantum/marvin
+Vcs-Git: https://github.com/afrl-quantum/marvin.git
+X-Python3-Version: >= 3.2
+XS-Python3-Version: >= 3.2
+
+Package: python3-marvin
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends}
+Description: Python wrappers for Marvin Test Gx* libraries
+ Marvin Test provides analog, digital, and FPGA hardware.
+ .
+ This package provides simple Python bindings using Python-Ctypes.
+Provides: ${python3:Provides}

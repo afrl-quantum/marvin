@@ -1,0 +1,11 @@
+changelog
+python3-marvin/
+*.log
+*.substvars
+files
+.debhelper/
+debhelper-build-stamp
+*.postinst.debhelper
+*.prerm.debhelper
+*.postrm.debhelper
+*.swp
