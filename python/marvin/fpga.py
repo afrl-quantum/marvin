@@ -45,7 +45,7 @@ class Board(object):
     function(*args)
     
     if status.value != 0:
-      err_str = create_string_buffer('', size=256)
+      err_str = create_string_buffer(b'', size=256)
       GxFpga.GxFpgaGetErrorString(status, err_str, 256, byref(status))
       raise FpgaError(err_str.value)
 
@@ -67,7 +67,7 @@ class Board(object):
     
     :return: the self-identification summary string
     """
-    buf = create_string_buffer('', size=256)
+    buf = create_string_buffer(b'', size=256)
     self._call(GxFpga.GxFpgaGetBoardSummary, self._handle, buf, 256)
     
     return buf.value

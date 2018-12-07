@@ -132,7 +132,7 @@ class Board(object):
     function(*args)
 
     if status.value != 0:
-      err_str = create_string_buffer('', size=256)
+      err_str = create_string_buffer(b'', size=256)
       GxAo.GxAoGetErrorString(status, err_str, 256, byref(status))
       raise AoError(err_str.value)
 
