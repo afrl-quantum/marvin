@@ -94,13 +94,16 @@ class Board(object):
     else:
       raise ValueError('target must be either "volatile" or "eeprom"')
 
+    if type(filename) is str:
+      filename = filename.encode()
+
     if progress is None:
       progress = lambda step, percent: None
     elif progress == 'stdout':
       base = os.path.basename(filename)
       def progress(step, percent):
         if step == 'start':
-          sys.stdout.write('Loading ' + base + ':   0%')
+          sys.stdout.write('Loading {}:   0%'.format(base))
           sys.stdout.flush()
         elif step == 'load':
           sys.stdout.write('\b\b\b\b{0:3d}%'.format(percent))
